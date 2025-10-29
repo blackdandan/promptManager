@@ -138,61 +138,7 @@
 - **分享统计**：记录分享链接的访问数据
 
 ## 6. 数据模型需求
-
-### 6.1 用户数据
-```json
-{
-  "id": "用户ID",
-  "email": "邮箱",
-  "createdAt": "创建时间",
-  "lastLogin": "最后登录时间"
-}
-```
-
-### 6.2 Prompt数据
-```json
-{
-  "id": "Prompt ID",
-  "userId": "用户ID",
-  "title": "标题",
-  "content": "内容",
-  "tags": ["标签1", "标签2"],
-  "category": "分类",
-  "variables": ["变量1", "变量2"],
-  "useCount": "使用次数",
-  "createdAt": "创建时间",
-  "updatedAt": "修改时间",
-  "isDeleted": "是否删除"
-}
-```
-
-### 6.3 文件夹数据
-```json
-{
-  "id": "文件夹ID",
-  "userId": "用户ID",
-  "name": "文件夹名称",
-  "parentId": "父文件夹ID",
-  "order": "排序序号",
-  "color": "文件夹颜色",
-  "icon": "文件夹图标",
-  "description": "文件夹描述",
-  "promptCount": "包含的prompt数量",
-  "createdAt": "创建时间",
-  "updatedAt": "修改时间",
-  "isDeleted": "是否删除"
-}
-```
-
-### 6.4 同步数据
-```json
-{
-  "userId": "用户ID",
-  "lastSyncTime": "最后同步时间",
-  "deviceId": "设备ID",
-  "syncVersion": "同步版本"
-}
-```
+（需求文档要啥数据模型，让数据设计去识别）
 
 ## 7. MVP功能优先级
 
