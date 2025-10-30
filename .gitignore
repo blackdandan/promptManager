@@ -75,3 +75,105 @@ coverage/
 *.pem
 *.key
 *.crt
+
+# ===============================================
+# Java/Kotlin/Gradle 项目特定规则
+# ===============================================
+
+# Gradle 构建输出
+**/.gradle/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Gradle 包装器属性文件（应该提交）
+!gradle/wrapper/gradle-wrapper.properties
+
+# 本地 Gradle 配置
+**/.gradle/**
+
+# IntelliJ IDEA
+*.iml
+*.iws
+*.ipr
+.idea/
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# 编译输出
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar
+
+# 日志文件
+hs_err_pid*
+
+# 虚拟机和容器文件
+*.vmoptions
+
+# 本地配置
+local.properties
+
+# 单元测试报告
+**/test-results/
+**/reports/
+**/build/reports/
+
+# Java Flight Recorder
+*.jfr
+
+# ===============================================
+# Spring Boot 特定规则
+# ===============================================
+
+# Spring Boot
+**/application-*.yml
+!**/application.yml
+!**/application-{profile}.yml.example
+
+# ===============================================
+# 微服务项目特定规则
+# ===============================================
+
+# 服务特定的构建输出
+**/build/
+**/target/
+
+# 本地开发配置
+**/.env.*
+**/config/local/
+**/config/dev/
+
+# 数据库文件
+*.h2.db
+*.mv.db
+
+# 临时文件
+*.tmp
+*.temp
