@@ -60,7 +60,7 @@ management:
 logging:
   level:
     com.promptflow.user: DEBUG
-    org.springframework.data.mongodb.core: INFO
+    org.springframework.data.mongodb.core: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 

@@ -19,7 +19,6 @@ spring:
                 redis-rate-limiter.replenishRate: 10
                 redis-rate-limiter.burstCapacity: 20
                 redis-rate-limiter.requestedTokens: 1
-            - StripPrefix=1
         
         # 会员服务路由
         - id: membership-service
@@ -86,7 +85,9 @@ eureka:
 logging:
   level:
     com.promptflow.gateway: DEBUG
-    org.springframework.cloud.gateway: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
+    reactor.netty.http.client: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 

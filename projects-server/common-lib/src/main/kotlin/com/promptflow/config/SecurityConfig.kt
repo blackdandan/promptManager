@@ -33,7 +33,7 @@ class SecurityConfig {
                 auth
                     // 公开接口
                     .requestMatchers(
-                        "/api/auth/**",
+                        "/auth/**",
                         "/actuator/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
@@ -51,8 +51,10 @@ class SecurityConfig {
         val configuration = CorsConfiguration().apply {
             allowedOriginPatterns = listOf(
                 "http://localhost:3000",
+                "http://localhost:8080",
                 "http://localhost:8081",
-                "http://localhost:8082"
+                "http://localhost:8082",
+                "http://localhost:8083"
             )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")

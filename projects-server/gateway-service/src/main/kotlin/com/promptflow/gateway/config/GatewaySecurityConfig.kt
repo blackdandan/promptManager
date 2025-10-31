@@ -8,6 +8,8 @@ import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.reactive.CorsConfigurationSource
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
+import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver
+import reactor.core.publisher.Mono
 
 @Configuration
 @EnableWebFluxSecurity
@@ -44,5 +46,13 @@ class GatewaySecurityConfig {
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
         return source
+    }
+
+    @Bean
+    fun keyResolver(): KeyResolver {
+        return KeyResolver { exchange ->
+            // 使用远程主机地址作为限流键
+            Mono.just(exchange.request.remoteAddress?.address?.hostAddress ?: "unknown")
+        }
     }
 }
