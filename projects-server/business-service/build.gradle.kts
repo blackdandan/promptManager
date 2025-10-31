@@ -25,6 +25,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     
     // Spring Cloud
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
@@ -39,6 +40,9 @@ dependencies {
     
     // Logging
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
+    
+    // Common Library
+    implementation(project(":common-lib"))
     
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
