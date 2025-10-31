@@ -1,0 +1,753 @@
+{
+  "info": {
+    "name": "PromptFlow API 测试集合",
+    "description": "PromptFlow 微服务API完整测试集合，包含认证、会话管理、业务服务和会员服务接口",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "认证服务",
+      "item": [
+        {
+          "name": "用户注册",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"displayName\": \"测试用户\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/auth/register",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "用户登录",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/auth/login",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证响应状态码",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// 验证响应结构",
+                  "pm.test(\"响应应包含标准结构\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('code');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "// 验证登录成功",
+                  "pm.test(\"登录成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.code).to.equal(200);",
+                  "    pm.expect(jsonData.message).to.equal(\"登录成功\");",
+                  "});",
+                  "",
+                  "// 设置环境变量",
+                  "pm.test(\"设置用户ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"user_id\", jsonData.data.userId);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "登录失败 - 密码错误",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/auth/login",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证认证失败",
+                  "pm.test(\"状态码应为 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"认证失败错误码\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.code).to.equal(\"AUTH_001\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "会话管理",
+      "item": [
+        {
+          "name": "创建会话",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceInfo\": {\n    \"deviceId\": \"test_device_001\",\n    \"deviceType\": \"WEB\",\n    \"os\": \"Windows 10\",\n    \"browser\": \"Chrome 120.0\",\n    \"appVersion\": \"1.0.0\"\n  },\n  \"tokenExpiryHours\": 24\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/sessions",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "sessions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证会话创建成功",
+                  "pm.test(\"状态码应为 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "// 验证会话数据",
+                  "pm.test(\"响应包含会话信息\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('sessionId');",
+                  "    pm.expect(jsonData.data).to.have.property('token');",
+                  "    pm.expect(jsonData.data).to.have.property('refreshToken');",
+                  "    pm.expect(jsonData.data).to.have.property('expiresAt');",
+                  "});",
+                  "",
+                  "// 设置环境变量",
+                  "pm.test(\"设置会话变量\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"session_id\", jsonData.data.sessionId);",
+                  "    pm.environment.set(\"bearer_token\", jsonData.data.token);",
+                  "    pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "获取会话列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-ID",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/sessions",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "sessions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证获取会话列表成功",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"响应包含会话列表\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "刷新Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\",\n  \"tokenExpiryHours\": 24\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/sessions/refresh",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "sessions", "refresh"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证Token刷新成功",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// 更新环境变量",
+                  "pm.test(\"更新Token变量\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"bearer_token\", jsonData.data.token);",
+                  "    pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "业务服务",
+      "item": [
+        {
+          "name": "创建Prompt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"测试Prompt标题\",\n  \"content\": \"这是一个测试Prompt的内容，用于验证API接口功能。\",\n  \"description\": \"测试Prompt的描述信息\",\n  \"tags\": [\"测试\", \"AI\", \"写作\"],\n  \"category\": \"工具类\",\n  \"isPublic\": true,\n  \"folderId\": null\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/prompts",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "prompts"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证Prompt创建成功",
+                  "pm.test(\"状态码应为 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "// 验证Prompt数据",
+                  "pm.test(\"响应包含Prompt信息\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('title');",
+                  "    pm.expect(jsonData.data).to.have.property('content');",
+                  "    pm.expect(jsonData.data).to.have.property('tags');",
+                  "});",
+                  "",
+                  "// 设置环境变量",
+                  "pm.test(\"设置Prompt ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"prompt_id\", jsonData.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "获取Prompt列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/prompts?page=0&size=10",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "prompts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证获取列表成功",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"响应包含分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('content');",
+                  "    pm.expect(jsonData.data).to.have.property('totalElements');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "获取单个Prompt",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/prompts/{{prompt_id}}",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "prompts", "{{prompt_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证获取单个Prompt成功",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"响应包含Prompt详情\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.id).to.equal(pm.environment.get(\"prompt_id\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "更新Prompt",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"更新后的Prompt标题\",\n  \"content\": \"更新后的Prompt内容，包含更多详细信息。\",\n  \"description\": \"更新后的描述\",\n  \"tags\": [\"测试\", \"AI\", \"写作\", \"更新\"],\n  \"category\": \"工具类\",\n  \"isPublic\": false,\n  \"isFavorite\": true,\n  \"folderId\": null,\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/prompts/{{prompt_id}}",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "prompts", "{{prompt_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证更新成功",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"标题已更新\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.title).to.equal(\"更新后的Prompt标题\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "切换收藏状态",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/prompts/{{prompt_id}}/favorite",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "prompts", "{{prompt_id}}", "favorite"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证收藏状态切换成功",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"收藏状态已更新\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.isFavorite).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "获取用户标签列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/prompts/tags",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "prompts", "tags"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证获取标签列表成功",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"响应包含标签数组\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "删除Prompt",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/prompts/{{prompt_id}}",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "prompts", "{{prompt_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证删除成功",
+                  "pm.test(\"状态码应为 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "会员服务",
+      "item": [
+        {
+          "name": "创建免费会员",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-ID",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/membership/free",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "membership", "free"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证免费会员创建成功",
+                  "pm.test(\"状态码应为 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"响应包含会员信息\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('membershipId');",
+                  "    pm.expect(jsonData.data).to.have.property('planType');",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "获取会员信息",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-ID",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/membership",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "membership"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证获取会员信息成功",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"响应包含会员详情\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.planType).to.equal(\"FREE\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "检查功能访问权限",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-ID",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/membership/check-access/export",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "membership", "check-access", "export"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证功能访问检查成功",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"响应包含访问权限信息\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('feature');",
+                  "    pm.expect(jsonData.data).to.have.property('hasAccess');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "获取使用统计",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-ID",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/membership/stats",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "membership", "stats"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 验证获取统计成功",
+                  "pm.test(\"状态码应为 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"响应包含使用统计\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('totalUsage');",
+                  "    pm.expect(jsonData.data).to.have.property('promptUsage');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "// 预请求脚本 - 设置默认值",
+          "if (!pm.environment.get(\"gateway_url\")) {",
+          "    pm.environment.set(\"gateway_url\", \"http://localhost:8080\");",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "exec": [
+          "// 全局测试脚本 - 验证响应格式",
+          "pm.test(\"响应时间应小于 5000ms\", function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "gateway_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bearer_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prompt_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
