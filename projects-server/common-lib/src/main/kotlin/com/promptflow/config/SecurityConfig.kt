@@ -34,8 +34,7 @@ class SecurityConfig {
                     // 公开接口
                     .requestMatchers(
                         "/api/auth/**",
-                        "/actuator/health",
-                        "/actuator/info",
+                        "/actuator/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html"
