@@ -55,5 +55,6 @@ data class DeviceInfo(
 enum class DeviceType {
     WEB,            // Web端
     ANDROID,        // Android端
-    IOS             // iOS端
+    IOS,             // iOS端
+    UNKNOWN             // iOS端
 }

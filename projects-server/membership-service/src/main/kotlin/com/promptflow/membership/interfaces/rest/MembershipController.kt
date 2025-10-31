@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/membership")
+@RequestMapping("/memberships")
 class MembershipController(
     private val membershipService: MembershipService
 ) {

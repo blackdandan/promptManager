@@ -7,6 +7,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 ### 基础信息
 - **基础URL**: `http://localhost:8080/api`
 - **认证方式**: Token认证 (通过请求头传递)
+- **认证头**: `Authorization: Bearer {{access_token}}`
 - **响应格式**: JSON
 - **错误处理**: 统一错误响应格式
 
@@ -78,12 +79,49 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
   "code": 200,
   "message": "登录成功",
   "data": {
-    "userId": "user_id",
-    "username": "user123",
-    "email": "user@example.com",
-    "displayName": "用户昵称",
-    "userType": "REGISTERED",
-    "roles": ["USER"]
+    "accessToken": "access_token",
+    "refreshToken": "refresh_token",
+    "expiresIn": 3600,
+    "user": {
+      "userId": "user_id",
+      "username": "user123",
+      "email": "user@example.com",
+      "displayName": "用户昵称",
+      "userType": "REGISTERED",
+      "roles": ["USER"]
+    }
+  }
+}
+```
+
+### 2.3 Token刷新
+
+**POST** `/auth/refresh`
+
+**请求体:**
+```json
+{
+  "refreshToken": "session_refresh_token"
+}
+```
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "Token刷新成功",
+  "data": {
+    "accessToken": "new_access_token",
+    "refreshToken": "new_refresh_token",
+    "expiresIn": 3600,
+    "user": {
+      "userId": "user_id",
+      "username": "user123",
+      "email": "user@example.com",
+      "displayName": "用户昵称",
+      "userType": "REGISTERED",
+      "roles": ["USER"]
+    }
   }
 }
 ```
@@ -201,7 +239,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
   "message": "会话创建成功",
   "data": {
     "sessionId": "session_id",
-    "token": "session_token",
+    "accessToken": "access_token",
     "refreshToken": "refresh_token",
     "expiresAt": "2024-01-01T00:00:00",
     "deviceInfo": {
@@ -234,7 +272,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
   "message": "Token刷新成功",
   "data": {
     "sessionId": "new_session_id",
-    "token": "new_session_token",
+    "accessToken": "new_access_token",
     "refreshToken": "new_refresh_token",
     "expiresAt": "2024-01-02T00:00:00",
     "deviceInfo": {
@@ -263,7 +301,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
   "data": [
     {
       "sessionId": "session_id",
-      "token": "session_token",
+      "accessToken": "access_token",
       "refreshToken": "refresh_token",
       "expiresAt": "2024-01-01T00:00:00",
       "deviceInfo": {
@@ -296,7 +334,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
   "data": [
     {
       "sessionId": "session_id",
-      "token": "session_token",
+      "accessToken": "access_token",
       "refreshToken": "refresh_token",
       "expiresAt": "2024-01-01T00:00:00",
       "deviceInfo": {

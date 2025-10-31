@@ -18,39 +18,6 @@ class SessionController(
     
     private val log = LoggerFactory.getLogger(this::class.java)
     
-    @PostMapping
-    fun createSession(
-        @RequestBody request: CreateSessionRequest,
-        httpRequest: HttpServletRequest
-    ): ResponseEntity<ApiResponse<SessionResponse>> {
-        log.info("创建用户会话: ${request.userId}, 设备: ${request.deviceInfo.deviceType}")
-        
-        try {
-            val session = sessionService.createUserSession(
-                userId = request.userId,
-                deviceInfo = request.deviceInfo,
-                ipAddress = getClientIpAddress(httpRequest),
-                userAgent = httpRequest.getHeader("User-Agent"),
-                tokenExpiryHours = request.tokenExpiryHours ?: 24
-            )
-            
-            val response = SessionResponse(
-                sessionId = session.id!!,
-                token = session.token,
-                refreshToken = session.refreshToken,
-                expiresAt = session.expiresAt,
-                deviceInfo = session.deviceInfo
-            )
-            
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(response, "会话创建成功"))
-                
-        } catch (e: Exception) {
-            log.error("创建会话失败: ${e.message}")
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(ErrorCodes.SYSTEM_001, "创建会话失败"))
-        }
-    }
     
     @PostMapping("/refresh")
     fun refreshToken(@RequestBody request: RefreshTokenRequest): ResponseEntity<ApiResponse<SessionResponse>> {
@@ -59,7 +26,7 @@ class SessionController(
         try {
             val session = sessionService.refreshToken(
                 refreshToken = request.refreshToken,
-                tokenExpiryHours = request.tokenExpiryHours ?: 24
+                tokenExpiryHours = 24
             )
             
             if (session == null) {
@@ -69,7 +36,7 @@ class SessionController(
             
             val response = SessionResponse(
                 sessionId = session.id!!,
-                token = session.token,
+                accessToken = session.token,
                 refreshToken = session.refreshToken,
                 expiresAt = session.expiresAt,
                 deviceInfo = session.deviceInfo
@@ -93,7 +60,7 @@ class SessionController(
             val response = sessions.map { session ->
                 SessionResponse(
                     sessionId = session.id!!,
-                    token = session.token,
+                    accessToken = session.token,
                     refreshToken = session.refreshToken,
                     expiresAt = session.expiresAt,
                     deviceInfo = session.deviceInfo,
@@ -121,7 +88,7 @@ class SessionController(
             val response = sessions.map { session ->
                 SessionResponse(
                     sessionId = session.id!!,
-                    token = session.token,
+                    accessToken = session.token,
                     refreshToken = session.refreshToken,
                     expiresAt = session.expiresAt,
                     deviceInfo = session.deviceInfo,
@@ -224,14 +191,10 @@ data class CreateSessionRequest(
     val tokenExpiryHours: Long? = 24
 )
 
-data class RefreshTokenRequest(
-    val refreshToken: String,
-    val tokenExpiryHours: Long? = 24
-)
 
 data class SessionResponse(
     val sessionId: String,
-    val token: String,
+    val accessToken: String,
     val refreshToken: String,
     val expiresAt: java.time.LocalDateTime,
     val deviceInfo: DeviceInfo,

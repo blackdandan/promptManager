@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/payment")
+@RequestMapping("/payments")
 class PaymentController(
     private val paymentService: PaymentService
 ) {

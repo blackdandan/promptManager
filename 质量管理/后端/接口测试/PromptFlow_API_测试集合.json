@@ -76,9 +76,11 @@
                   "});",
                   "",
                   "// 设置环境变量",
-                  "pm.test(\"设置用户ID\", function () {",
+                  "pm.test(\"设置Token变量\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.environment.set(\"user_id\", jsonData.data.userId);",
+                  "    pm.environment.set(\"user_id\", jsonData.data.user.userId);",
+                  "    pm.environment.set(\"access_token\", jsonData.data.accessToken);",
+                  "    pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
                   "});"
                 ]
               }
@@ -172,7 +174,7 @@
                   "pm.test(\"设置会话变量\", function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.environment.set(\"session_id\", jsonData.data.sessionId);",
-                  "    pm.environment.set(\"bearer_token\", jsonData.data.token);",
+                  "    pm.environment.set(\"access_token\", jsonData.data.accessToken);",
                   "    pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
                   "});"
                 ]
@@ -187,7 +189,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
@@ -216,7 +218,7 @@
           ]
         },
         {
-          "name": "刷新Token",
+          "name": "Token刷新",
           "request": {
             "method": "POST",
             "header": [
@@ -227,12 +229,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\",\n  \"tokenExpiryHours\": 24\n}"
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
             },
             "url": {
-              "raw": "{{gateway_url}}/api/sessions/refresh",
+              "raw": "{{gateway_url}}/api/auth/refresh",
               "host": ["{{gateway_url}}"],
-              "path": ["api", "sessions", "refresh"]
+              "path": ["api", "auth", "refresh"]
             }
           },
           "event": [
@@ -248,7 +250,7 @@
                   "// 更新环境变量",
                   "pm.test(\"更新Token变量\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.environment.set(\"bearer_token\", jsonData.data.token);",
+                  "    pm.environment.set(\"access_token\", jsonData.data.accessToken);",
                   "    pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
                   "});"
                 ]
@@ -272,7 +274,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "body": {
@@ -321,7 +323,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
@@ -367,7 +369,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
@@ -406,7 +408,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "body": {
@@ -445,7 +447,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
@@ -480,7 +482,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
@@ -515,7 +517,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
@@ -550,13 +552,13 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
-              "raw": "{{gateway_url}}/api/membership/free",
+              "raw": "{{gateway_url}}/api/memberships/free",
               "host": ["{{gateway_url}}"],
-              "path": ["api", "membership", "free"]
+              "path": ["api", "memberships", "free"]
             }
           },
           "event": [
@@ -587,13 +589,13 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
-              "raw": "{{gateway_url}}/api/membership",
+              "raw": "{{gateway_url}}/api/memberships",
               "host": ["{{gateway_url}}"],
-              "path": ["api", "membership"]
+              "path": ["api", "memberships"]
             }
           },
           "event": [
@@ -622,13 +624,13 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
-              "raw": "{{gateway_url}}/api/membership/check-access/export",
+              "raw": "{{gateway_url}}/api/memberships/check-access/export",
               "host": ["{{gateway_url}}"],
-              "path": ["api", "membership", "check-access", "export"]
+              "path": ["api", "memberships", "check-access", "export"]
             }
           },
           "event": [
@@ -658,13 +660,13 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{bearer_token}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
-              "raw": "{{gateway_url}}/api/membership/stats",
+              "raw": "{{gateway_url}}/api/memberships/stats",
               "host": ["{{gateway_url}}"],
-              "path": ["api", "membership", "stats"]
+              "path": ["api", "memberships", "stats"]
             }
           },
           "event": [
@@ -727,11 +729,6 @@
     },
     {
       "key": "session_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "bearer_token",
       "value": "",
       "type": "string"
     },

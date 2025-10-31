@@ -39,13 +39,7 @@
       "enabled": true
     },
     {
-      "key": "bearer_token",
-      "value": "",
-      "type": "secret",
-      "enabled": true
-    },
-    {
-      "key": "jwt_token",
+      "key": "access_token",
       "value": "",
       "type": "secret",
       "enabled": true
@@ -58,6 +52,12 @@
     },
     {
       "key": "user_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "session_id",
       "value": "",
       "type": "default",
       "enabled": true
