@@ -20,15 +20,14 @@ class SessionController(
     
     @PostMapping
     fun createSession(
-        @RequestHeader("X-User-ID") userId: String,
         @RequestBody request: CreateSessionRequest,
         httpRequest: HttpServletRequest
     ): ResponseEntity<ApiResponse<SessionResponse>> {
-        log.info("创建用户会话: $userId, 设备: ${request.deviceInfo.deviceType}")
+        log.info("创建用户会话: ${request.userId}, 设备: ${request.deviceInfo.deviceType}")
         
         try {
             val session = sessionService.createUserSession(
-                userId = userId,
+                userId = request.userId,
                 deviceInfo = request.deviceInfo,
                 ipAddress = getClientIpAddress(httpRequest),
                 userAgent = httpRequest.getHeader("User-Agent"),
@@ -220,6 +219,7 @@ class SessionController(
 }
 
 data class CreateSessionRequest(
+    val userId: String,
     val deviceInfo: DeviceInfo,
     val tokenExpiryHours: Long? = 24
 )

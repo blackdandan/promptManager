@@ -26,8 +26,11 @@ class SessionService(
     ): UserSession {
         log.info("创建用户会话: $userId, 设备: ${deviceInfo.deviceType}")
         
-        val token = generateSecureToken()
-        val refreshToken = generateSecureToken()
+        // 生成简单的Token（现在由网关处理JWT）
+        val token = "session_${UUID.randomUUID()}"
+        
+        // 生成刷新Token（简单的UUID，用于关联会话）
+        val refreshToken = UUID.randomUUID().toString()
         val expiresAt = LocalDateTime.now().plusHours(tokenExpiryHours)
         
         val session = UserSession(
@@ -46,6 +49,7 @@ class SessionService(
     }
     
     fun validateToken(token: String): UserSession? {
+        // 查询数据库中的会话
         val session = userSessionRepository.findByToken(token)
             .orElse(null) ?: return null
         
@@ -70,9 +74,11 @@ class SessionService(
             return null
         }
         
-        // 生成新的token和refreshToken
-        val newToken = generateSecureToken()
-        val newRefreshToken = generateSecureToken()
+        // 生成新的Token
+        val newToken = "session_${UUID.randomUUID()}"
+        
+        // 生成新的刷新Token
+        val newRefreshToken = UUID.randomUUID().toString()
         val newExpiresAt = LocalDateTime.now().plusHours(tokenExpiryHours)
         
         val updatedSession = session.copy(
@@ -136,10 +142,5 @@ class SessionService(
             "deviceTypes" to activeSessions.groupBy { it.deviceInfo.deviceType }.mapValues { it.value.size },
             "lastActivity" to lastActivity
         )
-    }
-    
-    private fun generateSecureToken(): String {
-        return UUID.randomUUID().toString().replace("-", "") + 
-               UUID.randomUUID().toString().replace("-", "")
     }
 }

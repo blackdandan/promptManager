@@ -13,24 +13,18 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 ### 统一响应格式
 ```json
 {
-  "success": true,
-  "data": { ... },
+  "code": 200,
   "message": "操作成功",
-  "error": null
+  "data": { ... }
 }
 ```
 
 ### 错误响应格式
 ```json
 {
-  "success": false,
-  "data": null,
-  "message": "错误描述",
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "错误消息",
-    "details": "详细错误信息"
-  }
+  "code": "ERROR_CODE",
+  "message": "错误消息",
+  "data": null
 }
 ```
 
@@ -53,7 +47,8 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 201,
+  "message": "注册成功",
   "data": {
     "userId": "user_id",
     "username": "user123",
@@ -61,8 +56,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
     "displayName": "用户昵称",
     "userType": "REGISTERED",
     "roles": ["USER"]
-  },
-  "message": "注册成功"
+  }
 }
 ```
 
@@ -81,7 +75,8 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "登录成功",
   "data": {
     "userId": "user_id",
     "username": "user123",
@@ -89,8 +84,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
     "displayName": "用户昵称",
     "userType": "REGISTERED",
     "roles": ["USER"]
-  },
-  "message": "登录成功"
+  }
 }
 ```
 
@@ -123,7 +117,8 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "三方登录成功",
   "data": {
     "userId": "user_id",
     "username": "user123",
@@ -131,8 +126,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
     "displayName": "用户昵称",
     "userType": "OAUTH",
     "roles": ["USER"]
-  },
-  "message": "三方登录成功"
+  }
 }
 ```
 
@@ -146,15 +140,15 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "获取三方登录关联成功",
   "data": [
     {
       "provider": "GITHUB",
       "providerUserId": "github_user_id",
       "createdAt": "2024-01-01T00:00:00"
     }
-  ],
-  "message": "获取三方登录关联成功"
+  ]
 }
 ```
 
@@ -171,9 +165,9 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
-  "data": null,
-  "message": "解绑三方登录成功"
+  "code": 200,
+  "message": "解绑三方登录成功",
+  "data": null
 }
 ```
 
@@ -203,7 +197,8 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 201,
+  "message": "会话创建成功",
   "data": {
     "sessionId": "session_id",
     "token": "session_token",
@@ -216,8 +211,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
       "browser": null,
       "appVersion": "1.0.0"
     }
-  },
-  "message": "会话创建成功"
+  }
 }
 ```
 
@@ -236,7 +230,8 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "Token刷新成功",
   "data": {
     "sessionId": "new_session_id",
     "token": "new_session_token",
@@ -249,8 +244,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
       "browser": null,
       "appVersion": "1.0.0"
     }
-  },
-  "message": "Token刷新成功"
+  }
 }
 ```
 
@@ -264,7 +258,8 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "获取会话列表成功",
   "data": [
     {
       "sessionId": "session_id",
@@ -282,8 +277,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
       "userAgent": "Mozilla/5.0...",
       "createdAt": "2024-01-01T00:00:00"
     }
-  ],
-  "message": "获取会话列表成功"
+  ]
 }
 ```
 
@@ -297,7 +291,8 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "获取活跃会话成功",
   "data": [
     {
       "sessionId": "session_id",
@@ -315,8 +310,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
       "userAgent": "Mozilla/5.0...",
       "createdAt": "2024-01-01T00:00:00"
     }
-  ],
-  "message": "获取活跃会话成功"
+  ]
 }
 ```
 
@@ -333,9 +327,9 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
-  "data": null,
-  "message": "会话失效成功"
+  "code": 200,
+  "message": "会话失效成功",
+  "data": null
 }
 ```
 
@@ -349,9 +343,9 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
-  "data": null,
-  "message": "所有会话失效成功"
+  "code": 200,
+  "message": "所有会话失效成功",
+  "data": null
 }
 ```
 
@@ -366,9 +360,9 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
-  "data": null,
-  "message": "其他会话失效成功"
+  "code": 200,
+  "message": "其他会话失效成功",
+  "data": null
 }
 ```
 
@@ -382,7 +376,8 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "获取会话统计成功",
   "data": {
     "totalSessions": 5,
     "activeSessions": 3,
@@ -391,56 +386,406 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
       "ANDROID": 1
     },
     "lastActivity": "2024-01-01T12:00:00"
-  },
-  "message": "获取会话统计成功"
+  }
 }
 ```
 
 ## 5. 业务接口
 
-### 5.1 获取Prompt列表
+### 5.1 获取用户Prompt列表
 
 **GET** `/prompts`
 
 **请求头:**
-- `X-User-ID`: 用户ID
+- `X-User-Id`: 用户ID
 
 **查询参数:**
-- `page`: 页码 (默认: 1)
-- `limit`: 每页数量 (默认: 20)
+- `page`: 页码 (默认: 0)
+- `size`: 每页数量 (默认: 20)
 - `search`: 搜索关键词
-- `tags`: 标签筛选 (逗号分隔)
+- `tags`: 标签筛选 (数组)
+- `category`: 分类筛选
+- `isFavorite`: 是否收藏
 
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "获取Prompt列表成功",
   "data": {
-    "prompts": [
+    "content": [
       {
         "id": "prompt_id",
+        "userId": "user_id",
         "title": "Prompt标题",
         "content": "Prompt内容",
+        "description": "描述",
         "tags": ["标签1", "标签2"],
+        "category": "分类",
         "isPublic": true,
+        "isFavorite": false,
+        "usageCount": 5,
+        "folderId": "folder_id",
+        "status": "ACTIVE",
+        "lastUsedAt": "2024-01-01T00:00:00",
         "createdAt": "2024-01-01T00:00:00",
         "updatedAt": "2024-01-01T00:00:00"
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 20,
-      "total": 100,
-      "pages": 5
-    }
-  },
-  "message": "获取Prompt列表成功"
+    "pageable": {
+      "pageNumber": 0,
+      "pageSize": 20,
+      "sort": { ... }
+    },
+    "totalElements": 100,
+    "totalPages": 5,
+    "last": false,
+    "first": true
+  }
 }
 ```
 
-### 5.2 创建Prompt
+### 5.2 获取单个Prompt
+
+**GET** `/prompts/{id}`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**路径参数:**
+- `id`: Prompt ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "获取Prompt成功",
+  "data": {
+    "id": "prompt_id",
+    "userId": "user_id",
+    "title": "Prompt标题",
+    "content": "Prompt内容",
+    "description": "描述",
+    "tags": ["标签1", "标签2"],
+    "category": "分类",
+    "isPublic": true,
+    "isFavorite": false,
+    "usageCount": 5,
+    "folderId": "folder_id",
+    "status": "ACTIVE",
+    "lastUsedAt": "2024-01-01T00:00:00",
+    "createdAt": "2024-01-01T00:00:00",
+    "updatedAt": "2024-01-01T00:00:00"
+  }
+}
+```
+
+### 5.3 创建Prompt
 
 **POST** `/prompts`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**请求体:**
+```json
+{
+  "title": "Prompt标题",
+  "content": "Prompt内容",
+  "description": "描述",
+  "tags": ["标签1", "标签2"],
+  "category": "分类",
+  "isPublic": true,
+  "folderId": "folder_id"
+}
+```
+
+**响应:**
+```json
+{
+  "code": 201,
+  "message": "创建Prompt成功",
+  "data": {
+    "id": "prompt_id",
+    "userId": "user_id",
+    "title": "Prompt标题",
+    "content": "Prompt内容",
+    "description": "描述",
+    "tags": ["标签1", "标签2"],
+    "category": "分类",
+    "isPublic": true,
+    "isFavorite": false,
+    "usageCount": 0,
+    "folderId": "folder_id",
+    "status": "ACTIVE",
+    "lastUsedAt": null,
+    "createdAt": "2024-01-01T00:00:00",
+    "updatedAt": "2024-01-01T00:00:00"
+  }
+}
+```
+
+### 5.4 更新Prompt
+
+**PUT** `/prompts/{id}`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**路径参数:**
+- `id`: Prompt ID
+
+**请求体:**
+```json
+{
+  "title": "更新后的标题",
+  "content": "更新后的内容",
+  "description": "更新后的描述",
+  "tags": ["新标签1", "新标签2"],
+  "category": "新分类",
+  "isPublic": false,
+  "isFavorite": true,
+  "folderId": "新文件夹ID",
+  "status": "INACTIVE"
+}
+```
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "更新Prompt成功",
+  "data": {
+    "id": "prompt_id",
+    "userId": "user_id",
+    "title": "更新后的标题",
+    "content": "更新后的内容",
+    "description": "更新后的描述",
+    "tags": ["新标签1", "新标签2"],
+    "category": "新分类",
+    "isPublic": false,
+    "isFavorite": true,
+    "usageCount": 5,
+    "folderId": "新文件夹ID",
+    "status": "INACTIVE",
+    "lastUsedAt": "2024-01-01T00:00:00",
+    "createdAt": "2024-01-01T00:00:00",
+    "updatedAt": "2024-01-02T00:00:00"
+  }
+}
+```
+
+### 5.5 删除Prompt
+
+**DELETE** `/prompts/{id}`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**路径参数:**
+- `id`: Prompt ID
+
+**响应:**
+```json
+{
+  "code": 204,
+  "message": "删除Prompt成功",
+  "data": null
+}
+```
+
+### 5.6 切换收藏状态
+
+**POST** `/prompts/{id}/favorite`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**路径参数:**
+- `id`: Prompt ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "切换收藏状态成功",
+  "data": {
+    "id": "prompt_id",
+    "userId": "user_id",
+    "title": "Prompt标题",
+    "content": "Prompt内容",
+    "description": "描述",
+    "tags": ["标签1", "标签2"],
+    "category": "分类",
+    "isPublic": true,
+    "isFavorite": true,
+    "usageCount": 5,
+    "folderId": "folder_id",
+    "status": "ACTIVE",
+    "lastUsedAt": "2024-01-01T00:00:00",
+    "createdAt": "2024-01-01T00:00:00",
+    "updatedAt": "2024-01-01T00:00:00"
+  }
+}
+```
+
+### 5.7 获取公开Prompt列表
+
+**GET** `/prompts/public`
+
+**查询参数:**
+- `page`: 页码 (默认: 0)
+- `size`: 每页数量 (默认: 20)
+- `search`: 搜索关键词
+- `tags`: 标签筛选 (数组)
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "获取公开Prompt列表成功",
+  "data": {
+    "content": [
+      {
+        "id": "prompt_id",
+        "userId": "user_id",
+        "title": "Prompt标题",
+        "content": "Prompt内容",
+        "description": "描述",
+        "tags": ["标签1", "标签2"],
+        "category": "分类",
+        "isPublic": true,
+        "isFavorite": false,
+        "usageCount": 5,
+        "folderId": "folder_id",
+        "status": "ACTIVE",
+        "lastUsedAt": "2024-01-01T00:00:00",
+        "createdAt": "2024-01-01T00:00:00",
+        "updatedAt": "2024-01-01T00:00:00"
+      }
+    ],
+    "pageable": { ... },
+    "totalElements": 50,
+    "totalPages": 3
+  }
+}
+```
+
+### 5.8 获取用户标签列表
+
+**GET** `/prompts/tags`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "获取标签列表成功",
+  "data": ["标签1", "标签2", "标签3"]
+}
+```
+
+### 5.9 获取用户统计信息
+
+**GET** `/prompts/stats`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "获取统计信息成功",
+  "data": {
+    "totalPrompts": 50,
+    "favoritePrompts": 10,
+    "publicPrompts": 15,
+    "totalUsage": 120,
+    "mostUsedTags": ["AI", "写作", "编程"]
+  }
+}
+```
+
+## 6. 会员服务接口
+
+### 6.1 创建免费会员
+
+**POST** `/membership/free`
+
+**请求头:**
+- `X-User-ID`: 用户ID
+
+**响应:**
+```json
+{
+  "code": 201,
+  "message": "免费会员创建成功",
+  "data": {
+    "membershipId": "membership_id",
+    "userId": "user_id",
+    "planType": "FREE",
+    "status": "ACTIVE",
+    "features": {
+      "promptLimit": 100,
+      "storageLimit": 1024,
+      "exportEnabled": true
+    },
+    "usageLimits": {
+      "prompts": 100,
+      "storage": 1024
+    },
+    "currentUsage": {
+      "prompts": 0,
+      "storage": 0
+    },
+    "currentPeriodStart": "2024-01-01T00:00:00",
+    "currentPeriodEnd": "2024-02-01T00:00:00"
+  }
+}
+```
+
+### 6.2 获取会员信息
+
+**GET** `/membership`
+
+**请求头:**
+- `X-User-ID`: 用户ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "获取会员信息成功",
+  "data": {
+    "membershipId": "membership_id",
+    "userId": "user_id",
+    "planType": "FREE",
+    "status": "ACTIVE",
+    "features": {
+      "promptLimit": 100,
+      "storageLimit": 1024,
+      "exportEnabled": true
+    },
+    "usageLimits": {
+      "prompts": 100,
+      "storage": 1024
+    },
+    "currentUsage": {
+      "prompts": 25,
+      "storage": 256
+    },
+    "currentPeriodStart": "2024-01-01T00:00:00",
+    "currentPeriodEnd": "2024-02-01T00:00:00"
+  }
+}
+```
+
+### 6.3 升级会员
+
+**POST** `/membership/upgrade`
 
 **请求头:**
 - `X-User-ID`: 用户ID
@@ -448,116 +793,262 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **请求体:**
 ```json
 {
-  "title": "Prompt标题",
-  "content": "Prompt内容",
-  "tags": ["标签1", "标签2"],
-  "isPublic": true
+  "planId": "premium_monthly",
+  "planType": "PREMIUM",
+  "billingCycle": "MONTHLY",
+  "amount": 2999
 }
 ```
 
 **响应:**
 ```json
 {
-  "success": true,
+  "code": 200,
+  "message": "会员升级成功",
   "data": {
-    "id": "prompt_id",
-    "title": "Prompt标题",
-    "content": "Prompt内容",
-    "tags": ["标签1", "标签2"],
-    "isPublic": true,
-    "createdAt": "2024-01-01T00:00:00",
-    "updatedAt": "2024-01-01T00:00:00"
-  },
-  "message": "创建Prompt成功"
+    "membershipId": "membership_id",
+    "userId": "user_id",
+    "planType": "PREMIUM",
+    "status": "ACTIVE",
+    "features": {
+      "promptLimit": 1000,
+      "storageLimit": 10240,
+      "exportEnabled": true,
+      "prioritySupport": true
+    },
+    "usageLimits": {
+      "prompts": 1000,
+      "storage": 10240
+    },
+    "currentUsage": {
+      "prompts": 25,
+      "storage": 256
+    },
+    "currentPeriodStart": "2024-01-01T00:00:00",
+    "currentPeriodEnd": "2024-02-01T00:00:00"
+  }
 }
 ```
 
-## 6. 错误码说明
+### 6.4 取消会员
 
-### 6.1 认证相关错误码
+**POST** `/membership/cancel`
+
+**请求头:**
+- `X-User-ID`: 用户ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "会员取消成功",
+  "data": {
+    "membershipId": "membership_id",
+    "userId": "user_id",
+    "planType": "FREE",
+    "status": "CANCELLED",
+    "features": {
+      "promptLimit": 100,
+      "storageLimit": 1024,
+      "exportEnabled": true
+    },
+    "usageLimits": {
+      "prompts": 100,
+      "storage": 1024
+    },
+    "currentUsage": {
+      "prompts": 25,
+      "storage": 256
+    },
+    "currentPeriodStart": "2024-01-01T00:00:00",
+    "currentPeriodEnd": "2024-02-01T00:00:00"
+  }
+}
+```
+
+### 6.5 更新使用量
+
+**POST** `/membership/usage`
+
+**请求头:**
+- `X-User-ID`: 用户ID
+
+**请求体:**
+```json
+{
+  "feature": "prompts",
+  "usage": 1
+}
+```
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "使用量更新成功",
+  "data": {
+    "membershipId": "membership_id",
+    "userId": "user_id",
+    "planType": "FREE",
+    "status": "ACTIVE",
+    "features": {
+      "promptLimit": 100,
+      "storageLimit": 1024,
+      "exportEnabled": true
+    },
+    "usageLimits": {
+      "prompts": 100,
+      "storage": 1024
+    },
+    "currentUsage": {
+      "prompts": 26,
+      "storage": 256
+    },
+    "currentPeriodStart": "2024-01-01T00:00:00",
+    "currentPeriodEnd": "2024-02-01T00:00:00"
+  }
+}
+```
+
+### 6.6 检查功能访问权限
+
+**GET** `/membership/check-access/{feature}`
+
+**请求头:**
+- `X-User-ID`: 用户ID
+
+**路径参数:**
+- `feature`: 功能名称
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "功能访问权限检查成功",
+  "data": {
+    "feature": "export",
+    "hasAccess": true
+  }
+}
+```
+
+### 6.7 获取使用统计
+
+**GET** `/membership/stats`
+
+**请求头:**
+- `X-User-ID`: 用户ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "获取使用统计成功",
+  "data": {
+    "totalUsage": 120,
+    "promptUsage": 25,
+    "storageUsage": 256,
+    "remainingPrompts": 75,
+    "remainingStorage": 768
+  }
+}
+```
+
+## 7. 错误码说明
+
+### 7.1 认证相关错误码
 - `AUTH_001`: 认证失败
 - `AUTH_002`: Token过期
 - `AUTH_003`: 三方登录失败
 - `AUTH_004`: 游客升级失败
 
-### 6.2 验证相关错误码
+### 7.2 验证相关错误码
 - `VALIDATION_001`: 参数验证失败
 
-### 6.3 资源相关错误码
+### 7.3 资源相关错误码
 - `NOT_FOUND_001`: 用户不存在
 - `NOT_FOUND_002`: Prompt不存在
+- `NOT_FOUND_003`: 会话不存在
 
-### 6.4 冲突相关错误码
+### 7.4 冲突相关错误码
 - `CONFLICT_001`: 邮箱已存在
 - `CONFLICT_002`: 用户名已存在
+- `CONFLICT_003`: 会员已存在
 
-### 6.5 权限相关错误码
+### 7.5 权限相关错误码
 - `ACCESS_DENIED_001`: 无权访问
 - `ACCESS_DENIED_002`: 权限不足
 
-### 6.6 系统相关错误码
+### 7.6 系统相关错误码
 - `SYSTEM_001`: 系统错误
 - `SYSTEM_002`: 数据库错误
 
-## 7. 设备类型说明
+### 7.7 会员相关错误码
+- `MEMBERSHIP_001`: 会员不存在
+- `MEMBERSHIP_002`: 会员已过期
+- `MEMBERSHIP_003`: 会员升级失败
+- `MEMBERSHIP_004`: 会员取消失败
+- `MEMBERSHIP_005`: 使用量更新失败
 
-### 7.1 支持的设备类型
+## 8. 设备类型说明
+
+### 8.1 支持的设备类型
 - `WEB`: Web端
 - `ANDROID`: Android端
 - `IOS`: iOS端
 
-## 8. 三方登录提供商
+## 9. 三方登录提供商
 
-### 8.1 支持的提供商
+### 9.1 支持的提供商
 - `GITHUB`: GitHub登录
 - `GOOGLE`: Google登录
 - `WECHAT`: 微信登录
 - `APPLE`: Apple登录
 
-## 9. 用户类型说明
+## 10. 用户类型说明
 
-### 9.1 用户类型
+### 10.1 用户类型
 - `REGISTERED`: 注册用户
 - `GUEST`: 游客
 - `OAUTH`: 三方登录用户
 
-## 10. 使用示例
+## 11. 使用示例
 
-### 10.1 完整登录流程
+### 11.1 完整登录流程
 1. 用户注册或登录
 2. 创建会话
 3. 使用Token访问受保护接口
 4. Token过期时使用refreshToken刷新
 
-### 10.2 三方登录流程
+### 11.2 三方登录流程
 1. 前端跳转到三方登录页面
 2. 三方登录成功后回调到后端
 3. 后端处理三方登录并返回用户信息
 4. 创建会话
 
-### 10.3 多设备管理
+### 11.3 多设备管理
 1. 用户可以在多个设备上同时登录
 2. 可以查看和管理所有活跃会话
 3. 可以单独或批量失效会话
 
-## 11. 安全说明
+## 12. 安全说明
 
-### 11.1 Token安全
+### 12.1 Token安全
 - Token有过期时间
 - 支持Token刷新
 - 支持会话失效
 
-### 11.2 密码安全
+### 12.2 密码安全
 - 使用BCrypt加密存储
 - 支持密码强度验证
 
-### 11.3 三方登录安全
+### 12.3 三方登录安全
 - 支持三方登录关联管理
 - 防止重复关联
 - 支持安全解绑
 
 ---
 
-**文档版本**: 1.0  
-**最后更新**: 2024年1月  
+**文档版本**: 2.0  
+**最后更新**: 2025年10月  
 **维护者**: PromptFlow开发团队

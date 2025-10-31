@@ -19,6 +19,7 @@ spring:
                 redis-rate-limiter.replenishRate: 10
                 redis-rate-limiter.burstCapacity: 20
                 redis-rate-limiter.requestedTokens: 1
+            - JwtAuthenticationFilter
         
         # 会员服务路由
         - id: membership-service
@@ -31,8 +32,8 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 redis-rate-limiter.requestedTokens: 1
-            - StripPrefix=1
-        
+            - JwtAuthenticationFilter
+
         # 业务服务路由
         - id: business-service
           uri: lb://business-service
@@ -44,8 +45,8 @@ spring:
                 redis-rate-limiter.replenishRate: 20
                 redis-rate-limiter.burstCapacity: 40
                 redis-rate-limiter.requestedTokens: 1
-            - StripPrefix=1
-      
+            - JwtAuthenticationFilter
+
       # 全局过滤器配置
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials

@@ -1,6 +1,6 @@
 package com.promptflow.gateway.filter
 
-import com.promptflow.common.jwt.JwtUtils
+import com.promptflow.gateway.jwt.GatewayJwtUtils
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.gateway.filter.GatewayFilter
 import org.springframework.cloud.gateway.filter.GatewayFilterChain
@@ -12,9 +12,9 @@ import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
 
 @Component
-class JwtAuthenticationFilter(
-    private val jwtUtils: JwtUtils
-) : AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config>(Config::class.java) {
+class JwtAuthenticationFilter : AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config>(Config::class.java) {
+
+    private val jwtUtils = GatewayJwtUtils()
 
     private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -74,15 +74,14 @@ class JwtAuthenticationFilter(
      * 检查是否为公开接口
      */
     private fun isPublicPath(path: String): Boolean {
-        val publicPaths = listOf(
-            "/api/auth/",
-            "/api/sessions/",
-            "/actuator/",
-            "/v3/api-docs/",
-            "/swagger-ui/",
-            "/swagger-ui.html"
+        val publicRegex = listOf(
+            "^/api/auth.*",
+            "^/api/sessions.*",
+            "^/actuator.*",
+            "^/v3/api-docs.*",
+            "^/swagger-ui.*"
         )
-        return publicPaths.any { path.startsWith(it) }
+        return publicRegex.any { Regex(it).matches(path) }
     }
 
     /**

@@ -31,15 +31,16 @@ class SecurityConfig {
             }
             .authorizeHttpRequests { auth ->
                 auth
-                    // 公开接口
+                    // 公开接口 - 业务服务需要更严格的控制
                     .requestMatchers(
-                        "/auth/**",
-                        "/actuator/**",
-                        "/v3/api-docs/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html"
+                        "/auth/**",          // 认证接口
+                        "/sessions/**",      // 会话管理接口
+                        "/actuator/**",          // 健康检查
+                        "/v3/api-docs/**",       // API文档
+                        "/swagger-ui/**",        // Swagger UI
+                        "/swagger-ui.html"       // Swagger UI页面
                     ).permitAll()
-                    // 需要认证的接口
+                    // 所有其他接口都需要认证
                     .anyRequest().authenticated()
             }
         

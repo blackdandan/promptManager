@@ -10,7 +10,7 @@
     },
     {
       "key": "gateway_url",
-      "value": "http://localhost:8765",
+      "value": "http://localhost:8080",
       "type": "default",
       "enabled": true
     },
@@ -40,6 +40,12 @@
     },
     {
       "key": "bearer_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "jwt_token",
       "value": "",
       "type": "secret",
       "enabled": true

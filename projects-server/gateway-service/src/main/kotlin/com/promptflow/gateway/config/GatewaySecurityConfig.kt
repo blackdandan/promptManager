@@ -22,7 +22,7 @@ class GatewaySecurityConfig {
             .cors { cors -> cors.configurationSource(corsConfigurationSource()) }
             .authorizeExchange { exchanges ->
                 exchanges
-                    // 公开接口 - 允许所有请求通过网关
+                    // 所有接口都放行，由JWT过滤器进行认证
                     .anyExchange().permitAll()
             }
             .build()

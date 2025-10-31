@@ -23,7 +23,7 @@ class PromptController(
     
     @GetMapping
     fun getUserPrompts(
-        @RequestHeader("X-User-Id") userId: String,
+        @RequestHeader("X-User-ID") userId: String,
         @RequestParam(required = false) search: String?,
         @RequestParam(required = false) tags: List<String>?,
         @RequestParam(required = false) category: String?,
@@ -37,7 +37,7 @@ class PromptController(
     
     @GetMapping("/{id}")
     fun getPrompt(
-        @RequestHeader("X-User-Id") userId: String,
+        @RequestHeader("X-User-ID") userId: String,
         @PathVariable id: String
     ): ResponseEntity<PromptResponse> {
         log.info("获取Prompt: $id")
@@ -47,7 +47,7 @@ class PromptController(
     
     @PostMapping
     fun createPrompt(
-        @RequestHeader("X-User-Id") userId: String,
+        @RequestHeader("X-User-ID") userId: String,
         @Valid @RequestBody request: CreatePromptRequest
     ): ResponseEntity<PromptResponse> {
         log.info("创建Prompt: ${request.title}")
@@ -57,7 +57,7 @@ class PromptController(
     
     @PutMapping("/{id}")
     fun updatePrompt(
-        @RequestHeader("X-User-Id") userId: String,
+        @RequestHeader("X-User-ID") userId: String,
         @PathVariable id: String,
         @Valid @RequestBody request: UpdatePromptRequest
     ): ResponseEntity<PromptResponse> {
@@ -82,7 +82,7 @@ class PromptController(
     
     @DeleteMapping("/{id}")
     fun deletePrompt(
-        @RequestHeader("X-User-Id") userId: String,
+        @RequestHeader("X-User-ID") userId: String,
         @PathVariable id: String
     ): ResponseEntity<Void> {
         log.info("删除Prompt: $id")
@@ -92,7 +92,7 @@ class PromptController(
     
     @PostMapping("/{id}/favorite")
     fun toggleFavorite(
-        @RequestHeader("X-User-Id") userId: String,
+        @RequestHeader("X-User-ID") userId: String,
         @PathVariable id: String
     ): ResponseEntity<PromptResponse> {
         log.info("切换收藏状态: $id")
@@ -112,14 +112,14 @@ class PromptController(
     }
     
     @GetMapping("/tags")
-    fun getUserTags(@RequestHeader("X-User-Id") userId: String): ResponseEntity<List<String>> {
+    fun getUserTags(@RequestHeader("X-User-ID") userId: String): ResponseEntity<List<String>> {
         log.info("获取用户 $userId 的标签列表")
         val tags = promptService.getUserTags(userId)
         return ResponseEntity.ok(tags)
     }
     
     @GetMapping("/stats")
-    fun getUserStats(@RequestHeader("X-User-Id") userId: String): ResponseEntity<Map<String, Any>> {
+    fun getUserStats(@RequestHeader("X-User-ID") userId: String): ResponseEntity<Map<String, Any>> {
         log.info("获取用户 $userId 的统计信息")
         val stats = promptService.getUserStats(userId)
         return ResponseEntity.ok(stats)
