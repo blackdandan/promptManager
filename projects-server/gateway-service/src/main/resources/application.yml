@@ -47,6 +47,34 @@ spring:
                 redis-rate-limiter.requestedTokens: 1
             - JwtAuthenticationFilter
 
+        # Swagger文档路由配置
+        # 用户服务Swagger
+        - id: user-service-swagger
+          uri: lb://user-service
+          predicates:
+            - Path=/swagger-ui/user/**,/v3/api-docs/user/**
+          filters:
+            - RewritePath=/swagger-ui/user/(?<segment>.*), /api/swagger-ui/$\{segment}
+            - RewritePath=/v3/api-docs/user/(?<segment>.*), /api/v3/api-docs/$\{segment}
+        
+        # 会员服务Swagger
+        - id: membership-service-swagger
+          uri: lb://membership-service
+          predicates:
+            - Path=/swagger-ui/membership/**,/v3/api-docs/membership/**
+          filters:
+            - RewritePath=/swagger-ui/membership/(?<segment>.*), /api/swagger-ui/$\{segment}
+            - RewritePath=/v3/api-docs/membership/(?<segment>.*), /api/v3/api-docs/$\{segment}
+        
+        # 业务服务Swagger
+        - id: business-service-swagger
+          uri: lb://business-service
+          predicates:
+            - Path=/swagger-ui/business/**,/v3/api-docs/business/**
+          filters:
+            - RewritePath=/swagger-ui/business/(?<segment>.*), /api/swagger-ui/$\{segment}
+            - RewritePath=/v3/api-docs/business/(?<segment>.*), /api/v3/api-docs/$\{segment}
+
       # 全局过滤器配置
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
