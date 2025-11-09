@@ -30,9 +30,9 @@
   "mcpServers": {
     "github.com/GLips/Figma-Context-MCP": {
       "command": "npx",
-      "args": ["-y", "figma-developer-mcp", "--figma-api-key=figd_CWdVjmwETzQgGbqLvDkMbxkOox9QQWI0t_ljs6_0", "--stdio"],
+      "args": ["-y", "figma-developer-mcp", "--figma-api-key=figd_qKGVLDZUUOfOAmNloOJazlNw6lJIztgDe9wDplMo", "--stdio"],
       "env": {
-        "FIGMA_API_KEY": "figd_CWdVjmwETzQgGbqLvDkMbxkOox9QQWI0t_ljs6_0"
+        "FIGMA_API_KEY": "figd_qKGVLDZUUOfOAmNloOJazlNw6lJIztgDe9wDplMo"
       },
       "disabled": false,
       "autoApprove": []
