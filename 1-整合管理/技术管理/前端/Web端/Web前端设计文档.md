@@ -13,17 +13,17 @@
 - **分享功能**：Prompt分享和复制
 
 ### 1.3 技术栈
-- **框架**：Vue 3 + TypeScript
-- **状态管理**：Pinia
-- **UI组件**：Element Plus
-- **路由**：Vue Router
+- **框架**：React + TypeScript
+- **状态管理**：Redux Toolkit
+- **UI组件**：Ant Design
+- **路由**：React Router
 - **HTTP客户端**：Axios
 - **构建工具**：Vite
 - **包管理**：npm/yarn
 - **IDE**：WebStorm
 
 ## 2. 项目结构
-PromptManage用户前端项目位置：/projects-web/web-prompt-client/
+PromptManage用户前端项目位置：/projects-web/web-prompt-client-react/
 ## 3. Figma项目位置
 promptManager Web
 ## 4. 后端项目位置
