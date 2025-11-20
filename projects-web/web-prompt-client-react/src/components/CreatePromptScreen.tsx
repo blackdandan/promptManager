@@ -34,12 +34,24 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
   const [detectedVariables, setDetectedVariables] = useState<string[]>([]);
   const [folders, setFolders] = useState<ApiFolder[]>([]);
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   // 根据文件夹ID获取文件夹名称
   const getFolderName = (folderId: string | null): string => {
     if (!folderId) return '';
     const foundFolder = folders.find(f => f.id === folderId);
     return foundFolder?.name || folderId;
+  };
+
+  // 切换文件夹展开状态
+  const toggleFolder = (folderId: string) => {
+    const newExpanded = new Set(expandedFolders);
+    if (newExpanded.has(folderId)) {
+      newExpanded.delete(folderId);
+    } else {
+      newExpanded.add(folderId);
+    }
+    setExpandedFolders(newExpanded);
   };
 
   // 加载文件夹列表
@@ -100,26 +112,45 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
   const renderFolderNode = (node: ApiFolder & { children: ApiFolder[] }, level: number = 0) => {
     const isSelected = folder === node.id;
     const hasChildren = node.children.length > 0;
+    const isExpanded = expandedFolders.has(node.id);
 
     return (
       <div key={node.id}>
-        <button
-          onClick={() => handleSelectFolder(node.id)}
-          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 transition-colors text-left ${
-            isSelected ? 'bg-blue-50 text-blue-700' : ''
-          }`}
-          style={{ paddingLeft: `${16 + level * 20}px` }}
-        >
-          {hasChildren ? (
-            <FolderOpen className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
-          ) : (
-            <Folder className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
+        <div className="flex items-center">
+          {hasChildren && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFolder(node.id);
+              }}
+              className="flex-shrink-0 p-1 hover:bg-gray-100 rounded transition-colors"
+            >
+              <ChevronRight 
+                className={`w-3 h-3 text-gray-500 transition-transform ${
+                  isExpanded ? 'rotate-90' : ''
+                }`} 
+              />
+            </button>
           )}
-          <span className="flex-1 truncate text-sm">{node.name}</span>
-          <span className="text-xs text-gray-400">{node.promptCount}</span>
-          {isSelected && <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />}
-        </button>
-        {hasChildren && (
+          {!hasChildren && <div className="w-5" />}
+          <button
+            onClick={() => handleSelectFolder(node.id)}
+            className={`flex-1 flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 transition-colors text-left ${
+              isSelected ? 'bg-blue-50 text-blue-700' : ''
+            }`}
+            style={{ paddingLeft: `${8 + level * 20}px` }}
+          >
+            {hasChildren ? (
+              <FolderOpen className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
+            ) : (
+              <Folder className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
+            )}
+            <span className="flex-1 truncate text-sm">{node.name}</span>
+            <span className="text-xs text-gray-400">{node.promptCount}</span>
+            {isSelected && <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />}
+          </button>
+        </div>
+        {hasChildren && isExpanded && (
           <div>
             {node.children.map(child => renderFolderNode(child, level + 1))}
           </div>
