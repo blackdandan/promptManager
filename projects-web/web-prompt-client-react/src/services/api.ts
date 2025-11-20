@@ -22,6 +22,10 @@ import type {
   MembershipStats,
   User,
   DeviceInfo,
+  Folder,
+  CreateFolderRequest,
+  UpdateFolderRequest,
+  FolderStats,
 } from "../types/api";
 import API_CONFIG from "../config/api.config";
 
@@ -515,6 +519,80 @@ export const membershipApi = {
   },
 };
 
+// ========== 文件夹接口 ==========
+export const folderApi = {
+  /**
+   * 创建文件夹
+   */
+  async createFolder(data: CreateFolderRequest): Promise<Folder> {
+    const response = await request<Folder>("/folders", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  /**
+   * 获取用户文件夹列表
+   */
+  async getFolders(): Promise<Folder[]> {
+    const response = await request<Folder[]>("/folders");
+    return response.data;
+  },
+
+  /**
+   * 获取单个文件夹
+   */
+  async getFolder(id: string): Promise<Folder> {
+    const response = await request<Folder>(`/folders/${id}`);
+    return response.data;
+  },
+
+  /**
+   * 更新文件夹
+   */
+  async updateFolder(id: string, data: UpdateFolderRequest): Promise<Folder> {
+    const response = await request<Folder>(`/folders/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  /**
+   * 删除文件夹
+   */
+  async deleteFolder(id: string): Promise<void> {
+    await request(`/folders/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  /**
+   * 获取子文件夹列表
+   */
+  async getFoldersByParentId(parentId: string): Promise<Folder[]> {
+    const response = await request<Folder[]>(`/folders/parent/${parentId}`);
+    return response.data;
+  },
+
+  /**
+   * 搜索文件夹
+   */
+  async searchFolders(search: string): Promise<Folder[]> {
+    const response = await request<Folder[]>(`/folders/search?search=${encodeURIComponent(search)}`);
+    return response.data;
+  },
+
+  /**
+   * 获取文件夹统计
+   */
+  async getFolderStats(id: string): Promise<FolderStats> {
+    const response = await request<FolderStats>(`/folders/${id}/stats`);
+    return response.data;
+  },
+};
+
 // ========== 导出所有API ==========
 export const api = {
   auth: authApi,
@@ -522,6 +600,7 @@ export const api = {
   session: sessionApi,
   prompt: promptApi,
   membership: membershipApi,
+  folder: folderApi,
 };
 
 export default api;

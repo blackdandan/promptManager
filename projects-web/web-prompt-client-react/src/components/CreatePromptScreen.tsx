@@ -8,17 +8,20 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { X, Plus, Folder, ChevronRight, Sparkles, AlertCircle, Check, FolderOpen } from 'lucide-react';
+import { api } from '../services/api';
+import type { Folder as ApiFolder } from '../types/api';
 
 type CreatePromptScreenProps = {
   prompt?: Prompt;
   onSave: (prompt: any) => void;
   onCancel: () => void;
+  onFolderCreated?: () => void;
   existingPrompts?: Prompt[];
 };
 
 const categories = ['通用', '写作', '编程', '分析', '创意', '营销'];
 
-export function CreatePromptScreen({ prompt, onSave, onCancel, existingPrompts = [] }: CreatePromptScreenProps) {
+export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, existingPrompts = [] }: CreatePromptScreenProps) {
   const [title, setTitle] = useState(prompt?.title || '');
   const [content, setContent] = useState(prompt?.content || '');
   const [category, setCategory] = useState(prompt?.category || '通用');
@@ -27,17 +30,112 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, existingPrompts =
   const [tagInput, setTagInput] = useState('');
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
-  const [newFolderPath, setNewFolderPath] = useState('');
+  const [newFolderName, setNewFolderName] = useState('');
   const [detectedVariables, setDetectedVariables] = useState<string[]>([]);
+  const [folders, setFolders] = useState<ApiFolder[]>([]);
+  const [isLoadingFolders, setIsLoadingFolders] = useState(false);
 
-  // 从现有prompts中提取所有文件夹
-  const folders = Array.from(new Set(existingPrompts.map(p => p.folder).filter(Boolean))) as string[];
+  // 根据文件夹ID获取文件夹名称
+  const getFolderName = (folderId: string | null): string => {
+    if (!folderId) return '';
+    const foundFolder = folders.find(f => f.id === folderId);
+    return foundFolder?.name || folderId;
+  };
+
+  // 加载文件夹列表
+  useEffect(() => {
+    if (isFolderSelectOpen) {
+      loadFolders();
+    }
+  }, [isFolderSelectOpen]);
+
+  const loadFolders = async () => {
+    try {
+      setIsLoadingFolders(true);
+      const folderList = await api.folder.getFolders();
+      setFolders(folderList);
+    } catch (error) {
+      console.error('加载文件夹失败:', error);
+    } finally {
+      setIsLoadingFolders(false);
+    }
+  };
+
+  // 构建文件夹树结构
+  const buildFolderTree = () => {
+    const folderMap = new Map<string, ApiFolder & { children: ApiFolder[] }>();
+    const rootFolders: (ApiFolder & { children: ApiFolder[] })[] = [];
+
+    // 创建所有文件夹节点
+    folders.forEach(folder => {
+      const node = {
+        ...folder,
+        children: []
+      };
+      folderMap.set(folder.id, node);
+    });
+
+    // 构建层级关系
+    folders.forEach(folder => {
+      const node = folderMap.get(folder.id);
+      if (node && folder.parentId) {
+        const parent = folderMap.get(folder.parentId);
+        if (parent) {
+          parent.children.push(node);
+        }
+      } else if (node) {
+        rootFolders.push(node);
+      }
+    });
+
+    // 排序
+    const sortFolders = (nodes: (ApiFolder & { children: ApiFolder[] })[]): (ApiFolder & { children: ApiFolder[] })[] => {
+      return nodes.sort((a, b) => a.name.localeCompare(b.name));
+    };
+
+    return sortFolders(rootFolders);
+  };
+
+  // 渲染文件夹节点
+  const renderFolderNode = (node: ApiFolder & { children: ApiFolder[] }, level: number = 0) => {
+    const isSelected = folder === node.id;
+    const hasChildren = node.children.length > 0;
+
+    return (
+      <div key={node.id}>
+        <button
+          onClick={() => handleSelectFolder(node.id)}
+          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 transition-colors text-left ${
+            isSelected ? 'bg-blue-50 text-blue-700' : ''
+          }`}
+          style={{ paddingLeft: `${16 + level * 20}px` }}
+        >
+          {hasChildren ? (
+            <FolderOpen className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
+          ) : (
+            <Folder className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
+          )}
+          <span className="flex-1 truncate text-sm">{node.name}</span>
+          <span className="text-xs text-gray-400">{node.promptCount}</span>
+          {isSelected && <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />}
+        </button>
+        {hasChildren && (
+          <div>
+            {node.children.map(child => renderFolderNode(child, level + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // 检测内容中的变量
   useEffect(() => {
     const regex = /\{([^}]+)\}/g;
     const matches = content.matchAll(regex);
-    const vars = Array.from(matches, m => m[1]);
+    const vars: string[] = [];
+    for (const match of matches) {
+      vars.push(match[1]);
+    }
     const uniqueVars = Array.from(new Set(vars));
     setDetectedVariables(uniqueVars);
   }, [content]);
@@ -80,17 +178,36 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, existingPrompts =
     }
   };
 
-  const handleCreateFolder = () => {
-    if (newFolderPath.trim()) {
-      setFolder(newFolderPath.trim());
-      setNewFolderPath('');
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) {
+      alert('请输入文件夹名称');
+      return;
+    }
+
+    try {
+      await api.folder.createFolder({ name: newFolderName.trim() });
+      setNewFolderName('');
       setIsFolderDialogOpen(false);
+      await loadFolders(); // 重新加载文件夹列表
+      
+      // 通知父组件刷新文件夹列表
+      if (onFolderCreated) {
+        onFolderCreated();
+      }
+    } catch (error) {
+      console.error('创建文件夹失败:', error);
+      alert('创建文件夹失败，请重试');
     }
   };
 
-  const handleSelectFolder = (folderPath: string) => {
-    setFolder(folderPath);
+  const handleSelectFolder = (folderId: string | null) => {
+    setFolder(folderId || '');
     setIsFolderSelectOpen(false);
+  };
+
+  const handleCancelCreate = () => {
+    setNewFolderName('');
+    setIsFolderDialogOpen(false);
   };
 
   const insertVariable = (variable: string) => {
@@ -236,7 +353,7 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, existingPrompts =
                   <span className="flex items-center gap-2 truncate">
                     <Folder className="w-4 h-4 flex-shrink-0 text-gray-500" />
                     <span className="truncate">
-                      {folder ? folder.split('/').pop() : '选择文件夹'}
+                      {folder ? getFolderName(folder) : '选择文件夹'}
                     </span>
                   </span>
                   <ChevronRight className="w-4 h-4 flex-shrink-0" />
@@ -254,7 +371,7 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, existingPrompts =
                     <div className="space-y-1 pr-4">
                       {/* 无文件夹选项 */}
                       <button
-                        onClick={() => handleSelectFolder('')}
+                        onClick={() => handleSelectFolder(null)}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 transition-colors text-left ${
                           !folder ? 'bg-blue-50 text-blue-700' : ''
                         }`}
@@ -265,28 +382,13 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, existingPrompts =
                       </button>
 
                       {/* 文件夹列表 */}
-                      {folders.sort().map((f) => {
-                        const level = f.split('/').length - 1;
-                        const isSelected = folder === f;
-                        return (
-                          <button
-                            key={f}
-                            onClick={() => handleSelectFolder(f)}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 transition-colors text-left ${
-                              isSelected ? 'bg-blue-50 text-blue-700' : ''
-                            }`}
-                            style={{ paddingLeft: `${16 + level * 20}px` }}
-                          >
-                            {level > 0 ? (
-                              <FolderOpen className="w-4 h-4 flex-shrink-0" />
-                            ) : (
-                              <Folder className="w-4 h-4 flex-shrink-0" />
-                            )}
-                            <span className="flex-1 truncate text-sm">{f.split('/').pop()}</span>
-                            {isSelected && <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />}
-                          </button>
-                        );
-                      })}
+                      {isLoadingFolders ? (
+                        <div className="flex justify-center py-4">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : (
+                        buildFolderTree().map(node => renderFolderNode(node))
+                      )}
                     </div>
                   </div>
                   
@@ -309,7 +411,7 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, existingPrompts =
               {folder && (
                 <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
                   <ChevronRight className="w-3 h-3" />
-                  <span className="truncate">{folder}</span>
+                  <span className="truncate">{getFolderName(folder)}</span>
                 </div>
               )}
             </div>
@@ -386,39 +488,36 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, existingPrompts =
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="folder-path">
-                文件夹路径
+              <Label htmlFor="folder-name">
+                文件夹名称
               </Label>
               <Input
-                id="folder-path"
-                placeholder="例如：工作/写作/文案 (最多3级)"
-                value={newFolderPath}
-                onChange={(e) => setNewFolderPath(e.target.value)}
+                id="folder-name"
+                placeholder="输入文件夹名称"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
                 className="mt-2"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleCreateFolder();
+                  } else if (e.key === 'Escape') {
+                    handleCancelCreate();
+                  }
+                }}
               />
               <p className="text-xs text-gray-500 mt-2">
-                使用 "/" 分隔多级文件夹，最多支持3级目录
+                创建新的文件夹用于组织您的 Prompt
               </p>
             </div>
-            {newFolderPath && (
-              <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                <p className="text-xs text-blue-700 mb-1.5">预览路径：</p>
-                <div className="flex items-center gap-1 text-sm">
-                  <Folder className="w-4 h-4 text-blue-600" />
-                  <span className="text-blue-900">
-                    {newFolderPath.split('/').slice(0, 3).join(' / ')}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFolderDialogOpen(false)}>
+            <Button variant="outline" onClick={handleCancelCreate}>
               取消
             </Button>
             <Button 
               onClick={handleCreateFolder}
-              disabled={!newFolderPath.trim()}
+              disabled={!newFolderName.trim()}
             >
               确定
             </Button>

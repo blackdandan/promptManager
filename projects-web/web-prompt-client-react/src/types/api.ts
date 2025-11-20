@@ -217,6 +217,40 @@ export interface MembershipStats {
   remainingStorage: number;
 }
 
+// ========== 文件夹相关类型 ==========
+export interface Folder {
+  id: string;
+  userId: string;
+  name: string;
+  parentId?: string;
+  order: number;
+  color?: string;
+  icon?: string;
+  description?: string;
+  promptCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateFolderRequest {
+  name: string;
+  parentId?: string;
+}
+
+export interface UpdateFolderRequest {
+  name?: string;
+  parentId?: string;
+}
+
+export interface FolderStats {
+  folderId: string;
+  name: string;
+  promptCount: number;
+  childFolderCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ========== 错误类型 ==========
 export interface ApiError {
   code: string;

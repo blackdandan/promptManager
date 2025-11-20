@@ -30,6 +30,7 @@ class PromptService(
         tags: List<String>?,
         category: String?,
         isFavorite: Boolean?,
+        folderId: String?,
         pageable: Pageable
     ): Page<Prompt> {
         val query = Query().addCriteria(Criteria.where("user_id").`is`(userId))
@@ -59,10 +60,30 @@ class PromptService(
             query.addCriteria(Criteria.where("is_favorite").`is`(isFavorite))
         }
         
+        // 文件夹过滤
+        if (!folderId.isNullOrBlank()) {
+            query.addCriteria(Criteria.where("folder_id").`is`(folderId))
+        }
+        
         // 只查询活跃的Prompt
         query.addCriteria(Criteria.where("status").`is`(PromptStatus.ACTIVE.name))
         
         // 分页
+        query.with(pageable)
+        
+        val prompts = mongoTemplate.find(query, Prompt::class.java)
+        val count = mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Prompt::class.java)
+        
+        return PageableExecutionUtils.getPage(prompts, pageable) { count }
+    }
+    
+    fun getPromptsByFolder(userId: String, folderId: String, pageable: Pageable): Page<Prompt> {
+        val query = Query().addCriteria(
+            Criteria.where("user_id").`is`(userId)
+                .and("folder_id").`is`(folderId)
+                .and("status").`is`(PromptStatus.ACTIVE.name)
+        )
+        
         query.with(pageable)
         
         val prompts = mongoTemplate.find(query, Prompt::class.java)

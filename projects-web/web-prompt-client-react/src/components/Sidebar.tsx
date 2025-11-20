@@ -14,9 +14,11 @@ import {
   Home
 } from 'lucide-react';
 import { useState } from 'react';
+import type { Folder as ApiFolder } from '../types/api';
 
 type SidebarProps = {
   prompts: Prompt[];
+  folders: ApiFolder[];
   currentView: 'main' | 'search' | 'profile';
   selectedFolder: string | null;
   onViewChange: (view: 'main' | 'search' | 'profile') => void;
@@ -26,6 +28,7 @@ type SidebarProps = {
 
 export function Sidebar({ 
   prompts, 
+  folders,
   currentView, 
   selectedFolder, 
   onViewChange, 
@@ -39,52 +42,65 @@ export function Sidebar({
     const folderMap = new Map<string, { name: string; path: string; level: number; children: string[]; count: number }>();
     const rootFolders: string[] = [];
 
-    // 统计文件夹数量
-    const folderCounts = new Map<string, number>();
-    prompts.forEach(prompt => {
-      if (prompt.folder) {
-        const parts = prompt.folder.split('/');
-        let currentPath = '';
-        parts.forEach((part, index) => {
-          if (index < 3) {
-            currentPath = currentPath ? `${currentPath}/${part}` : part;
-            folderCounts.set(currentPath, (folderCounts.get(currentPath) || 0) + 1);
-          }
+    // 使用API返回的文件夹数据
+    if (folders.length > 0) {
+      folders.forEach(folder => {
+        folderMap.set(folder.id, {
+          name: folder.name,
+          path: folder.id,
+          level: 0, // 简化处理，所有文件夹都作为根级
+          children: [],
+          count: folder.promptCount || 0,
         });
-      }
-    });
-
-    // 创建文件夹节点
-    prompts.forEach(prompt => {
-      if (!prompt.folder) return;
-      
-      const parts = prompt.folder.split('/').slice(0, 3);
-      let currentPath = '';
-      
-      parts.forEach((part, level) => {
-        const parentPath = currentPath;
-        currentPath = currentPath ? `${currentPath}/${part}` : part;
-        
-        if (!folderMap.has(currentPath)) {
-          folderMap.set(currentPath, {
-            name: part,
-            path: currentPath,
-            level: level,
-            children: [],
-            count: folderCounts.get(currentPath) || 0,
-          });
-          
-          if (level === 0) {
-            rootFolders.push(currentPath);
-          } else {
-            const parent = folderMap.get(parentPath);
-            if (parent && !parent.children.includes(currentPath)) {
-              parent.children.push(currentPath);
+        rootFolders.push(folder.id);
+      });
+    } else {
+      // 回退到从prompts中构建文件夹树
+      const folderCounts = new Map<string, number>();
+      prompts.forEach(prompt => {
+        if (prompt.folder) {
+          const parts = prompt.folder.split('/');
+          let currentPath = '';
+          parts.forEach((part, index) => {
+            if (index < 3) {
+              currentPath = currentPath ? `${currentPath}/${part}` : part;
+              folderCounts.set(currentPath, (folderCounts.get(currentPath) || 0) + 1);
             }
-          }
+          });
         }
       });
-    });
+
+      prompts.forEach(prompt => {
+        if (!prompt.folder) return;
+        
+        const parts = prompt.folder.split('/').slice(0, 3);
+        let currentPath = '';
+        
+        parts.forEach((part, level) => {
+          const parentPath = currentPath;
+          currentPath = currentPath ? `${currentPath}/${part}` : part;
+          
+          if (!folderMap.has(currentPath)) {
+            folderMap.set(currentPath, {
+              name: part,
+              path: currentPath,
+              level: level,
+              children: [],
+              count: folderCounts.get(currentPath) || 0,
+            });
+            
+            if (level === 0) {
+              rootFolders.push(currentPath);
+            } else {
+              const parent = folderMap.get(parentPath);
+              if (parent && !parent.children.includes(currentPath)) {
+                parent.children.push(currentPath);
+              }
+            }
+          }
+        });
+      });
+    }
 
     return { folderMap, rootFolders: Array.from(new Set(rootFolders)) };
   };

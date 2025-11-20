@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Prompt } from '../App';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
 import { Star, Clock, Copy, Search } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { copyToClipboard } from '../utils/clipboard';
 
 type MainScreenProps = {
   prompts: Prompt[];
   selectedFolder: string | null;
+  selectedFolderName: string;
   onPromptClick: (prompt: Prompt) => void;
   onToggleFavorite: (id: string) => void;
   isLoading?: boolean;
@@ -19,6 +20,7 @@ type MainScreenProps = {
 export function MainScreen({ 
   prompts, 
   selectedFolder,
+  selectedFolderName,
   onPromptClick, 
   onToggleFavorite,
   isLoading = false
@@ -74,10 +76,10 @@ export function MainScreen({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-2xl">
-              {selectedFolder ? selectedFolder.split('/').pop() : '全部 Prompts'}
+              {selectedFolderName || '全部 Prompts'}
             </h2>
             {selectedFolder && (
-              <p className="text-sm text-gray-500 mt-1">{selectedFolder}</p>
+              <p className="text-sm text-gray-500 mt-1">文件夹: {selectedFolderName}</p>
             )}
           </div>
           <div className="flex items-center gap-3">

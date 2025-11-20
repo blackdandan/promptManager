@@ -8,7 +8,7 @@ import { SearchScreen } from "./components/SearchScreen";
 import { ProfileScreen } from "./components/ProfileScreen";
 import { Toaster, toast } from "sonner";
 import api from "./services/api";
-import type { Prompt as ApiPrompt, User } from "./types/api";
+import type { Prompt as ApiPrompt, User, Folder as ApiFolder } from "./types/api";
 
 // 本地Prompt类型（为了兼容现有组件）
 export type Prompt = {
@@ -57,6 +57,8 @@ export default function App() {
   const [currentView, setCurrentView] = useState<"main" | "search" | "profile">("main");
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [folders, setFolders] = useState<ApiFolder[]>([]);
+  const [isLoadingFolders, setIsLoadingFolders] = useState(false);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [isLoadingPrompts, setIsLoadingPrompts] = useState(false);
 
@@ -149,6 +151,40 @@ export default function App() {
     }
   };
 
+  // 加载文件夹列表
+  const loadFolders = async () => {
+    if (currentUser?.userType === 'GUEST') {
+      // 游客模式：从prompts中提取文件夹信息
+      const folderSet = new Set<string>();
+      prompts.forEach(prompt => {
+        if (prompt.folder) {
+          folderSet.add(prompt.folder);
+        }
+      });
+      const folderList = Array.from(folderSet).map(folderPath => ({
+        id: folderPath,
+        name: folderPath.split('/').pop() || folderPath,
+        parentId: null,
+        promptCount: prompts.filter(p => p.folder === folderPath).length,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }));
+      setFolders(folderList);
+      return;
+    }
+
+    // 真实用户：调用API
+    setIsLoadingFolders(true);
+    try {
+      const folderList = await api.folder.getFolders();
+      setFolders(folderList);
+    } catch (error) {
+      console.error("加载文件夹失败:", error);
+    } finally {
+      setIsLoadingFolders(false);
+    }
+  };
+
   // 加载Prompts（真实用户）
   const loadPrompts = async () => {
     setIsLoadingPrompts(true);
@@ -157,6 +193,9 @@ export default function App() {
       // API返回的是 PageableResponse<Prompt> 格式
       const convertedPrompts = response.content.map(convertApiPrompt);
       setPrompts(convertedPrompts);
+      
+      // 加载文件夹列表
+      await loadFolders();
     } catch (error) {
       toast.error("加载Prompts失败: " + (error instanceof Error ? error.message : "未知错误"));
     } finally {
@@ -367,6 +406,20 @@ export default function App() {
     }
   };
 
+  // 根据文件夹ID获取文件夹名称
+  const getFolderName = (folderId: string | null): string => {
+    if (!folderId) return '';
+    
+    // 游客模式：文件夹ID就是路径，直接返回最后一部分
+    if (currentUser?.userType === 'GUEST') {
+      return folderId.split('/').pop() || folderId;
+    }
+    
+    // 真实用户：从文件夹列表中查找
+    const folder = folders.find(f => f.id === folderId);
+    return folder?.name || folderId;
+  };
+
   // 初始加载中
   if (isLoading) {
     return (
@@ -394,6 +447,7 @@ export default function App() {
         {/* Sidebar */}
         <Sidebar
           prompts={prompts}
+          folders={folders}
           currentView={currentView}
           selectedFolder={selectedFolder}
           onViewChange={(view) => {
@@ -410,6 +464,7 @@ export default function App() {
             <MainScreen
               prompts={prompts}
               selectedFolder={selectedFolder}
+              selectedFolderName={getFolderName(selectedFolder)}
               onPromptClick={(prompt) => {
                 setSelectedPrompt(prompt);
                 setCurrentScreen("detail");
@@ -423,6 +478,7 @@ export default function App() {
             <CreatePromptScreen
               onSave={handleCreatePrompt}
               onCancel={() => setCurrentScreen("main")}
+              onFolderCreated={loadFolders}
               existingPrompts={prompts}
             />
           )}

@@ -29,16 +29,34 @@ class PromptController(
         @RequestParam(required = false) tags: List<String>?,
         @RequestParam(required = false) category: String?,
         @RequestParam(required = false) isFavorite: Boolean?,
+        @RequestParam(required = false) folderId: String?,
         pageable: Pageable
     ): ResponseEntity<ApiResponse<Page<PromptResponse>>> {
         log.info("获取用户 $userId 的Prompt列表")
         try {
-            val prompts = promptService.getUserPrompts(userId, search, tags, category, isFavorite, pageable)
+            val prompts = promptService.getUserPrompts(userId, search, tags, category, isFavorite, folderId, pageable)
             return ResponseEntity.ok(ApiResponse.success(prompts.map { PromptResponse.fromDomain(it) }, "获取Prompt列表成功"))
         } catch (e: Exception) {
             log.error("获取Prompt列表失败: ${e.message}")
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("SYSTEM_001", e.message ?: "获取Prompt列表失败"))
+        }
+    }
+    
+    @GetMapping("/folder/{folderId}")
+    fun getPromptsByFolder(
+        @RequestHeader("X-User-ID") userId: String,
+        @PathVariable folderId: String,
+        pageable: Pageable
+    ): ResponseEntity<ApiResponse<Page<PromptResponse>>> {
+        log.info("获取文件夹 $folderId 中的Prompt列表")
+        try {
+            val prompts = promptService.getPromptsByFolder(userId, folderId, pageable)
+            return ResponseEntity.ok(ApiResponse.success(prompts.map { PromptResponse.fromDomain(it) }, "获取文件夹Prompt列表成功"))
+        } catch (e: Exception) {
+            log.error("获取文件夹Prompt列表失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("SYSTEM_005", e.message ?: "获取文件夹Prompt列表失败"))
         }
     }
     
