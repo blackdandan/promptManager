@@ -85,11 +85,6 @@ export interface OAuthConnection {
 }
 
 // ========== 会话相关类型 ==========
-export interface CreateSessionRequest {
-  deviceInfo: DeviceInfo;
-  tokenExpiryHours?: number;
-}
-
 export interface Session {
   sessionId: string;
   accessToken: string;

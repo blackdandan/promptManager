@@ -9,7 +9,6 @@ import type {
   OAuthCallbackRequest,
   OAuthProvider,
   OAuthConnection,
-  CreateSessionRequest,
   Session,
   SessionStats,
   Prompt,
@@ -260,22 +259,6 @@ export const oauthApi = {
 
 // ========== 会话接口 ==========
 export const sessionApi = {
-  /**
-   * 创建会话
-   */
-  async createSession(tokenExpiryHours = 24): Promise<Session> {
-    const deviceInfo = getDeviceInfo();
-    const response = await request<Session>("/sessions", {
-      method: "POST",
-      body: JSON.stringify({
-        deviceInfo,
-        tokenExpiryHours,
-      }),
-    });
-    saveSessionId(response.data.sessionId);
-    saveTokens(response.data.accessToken, response.data.refreshToken);
-    return response.data;
-  },
 
   /**
    * 刷新会话Token

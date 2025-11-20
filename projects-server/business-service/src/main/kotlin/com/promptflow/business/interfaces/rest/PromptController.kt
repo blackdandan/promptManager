@@ -1,5 +1,6 @@
 package com.promptflow.business.interfaces.rest
 
+import com.promptflow.common.dto.ApiResponse
 import com.promptflow.business.application.service.PromptService
 import com.promptflow.business.domain.model.PromptStatus
 import com.promptflow.business.interfaces.rest.dto.CreatePromptRequest
@@ -29,30 +30,49 @@ class PromptController(
         @RequestParam(required = false) category: String?,
         @RequestParam(required = false) isFavorite: Boolean?,
         pageable: Pageable
-    ): ResponseEntity<Page<PromptResponse>> {
+    ): ResponseEntity<ApiResponse<Page<PromptResponse>>> {
         log.info("获取用户 $userId 的Prompt列表")
-        val prompts = promptService.getUserPrompts(userId, search, tags, category, isFavorite, pageable)
-        return ResponseEntity.ok(prompts.map { PromptResponse.fromDomain(it) })
+        try {
+            val prompts = promptService.getUserPrompts(userId, search, tags, category, isFavorite, pageable)
+            return ResponseEntity.ok(ApiResponse.success(prompts.map { PromptResponse.fromDomain(it) }, "获取Prompt列表成功"))
+        } catch (e: Exception) {
+            log.error("获取Prompt列表失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("SYSTEM_001", e.message ?: "获取Prompt列表失败"))
+        }
     }
     
     @GetMapping("/{id}")
     fun getPrompt(
         @RequestHeader("X-User-ID") userId: String,
         @PathVariable id: String
-    ): ResponseEntity<PromptResponse> {
+    ): ResponseEntity<ApiResponse<PromptResponse>> {
         log.info("获取Prompt: $id")
-        val prompt = promptService.getPrompt(userId, id)
-        return ResponseEntity.ok(PromptResponse.fromDomain(prompt))
+        try {
+            val prompt = promptService.getPrompt(userId, id)
+            return ResponseEntity.ok(ApiResponse.success(PromptResponse.fromDomain(prompt), "获取Prompt成功"))
+        } catch (e: Exception) {
+            log.error("获取Prompt失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("PROMPT_001", e.message ?: "Prompt不存在"))
+        }
     }
     
     @PostMapping
     fun createPrompt(
         @RequestHeader("X-User-ID") userId: String,
         @Valid @RequestBody request: CreatePromptRequest
-    ): ResponseEntity<PromptResponse> {
+    ): ResponseEntity<ApiResponse<PromptResponse>> {
         log.info("创建Prompt: ${request.title}")
-        val prompt = promptService.createPrompt(userId, request.toDomain(userId))
-        return ResponseEntity.status(HttpStatus.CREATED).body(PromptResponse.fromDomain(prompt))
+        try {
+            val prompt = promptService.createPrompt(userId, request.toDomain(userId))
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(PromptResponse.fromDomain(prompt), "Prompt创建成功"))
+        } catch (e: Exception) {
+            log.error("创建Prompt失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("PROMPT_002", e.message ?: "创建Prompt失败"))
+        }
     }
     
     @PutMapping("/{id}")
@@ -60,44 +80,62 @@ class PromptController(
         @RequestHeader("X-User-ID") userId: String,
         @PathVariable id: String,
         @Valid @RequestBody request: UpdatePromptRequest
-    ): ResponseEntity<PromptResponse> {
+    ): ResponseEntity<ApiResponse<PromptResponse>> {
         log.info("更新Prompt: $id")
-        val existingPrompt = promptService.getPrompt(userId, id)
-        
-        val updatedPrompt = existingPrompt.copy(
-            title = request.title ?: existingPrompt.title,
-            content = request.content ?: existingPrompt.content,
-            description = request.description ?: existingPrompt.description,
-            tags = request.tags ?: existingPrompt.tags,
-            category = request.category ?: existingPrompt.category,
-            isPublic = request.isPublic ?: existingPrompt.isPublic,
-            isFavorite = request.isFavorite ?: existingPrompt.isFavorite,
-            folderId = request.folderId ?: existingPrompt.folderId,
-            status = request.status?.let { PromptStatus.valueOf(it) } ?: existingPrompt.status
-        )
-        
-        val savedPrompt = promptService.updatePrompt(userId, id, updatedPrompt)
-        return ResponseEntity.ok(PromptResponse.fromDomain(savedPrompt))
+        try {
+            val existingPrompt = promptService.getPrompt(userId, id)
+            
+            val updatedPrompt = existingPrompt.copy(
+                title = request.title ?: existingPrompt.title,
+                content = request.content ?: existingPrompt.content,
+                description = request.description ?: existingPrompt.description,
+                tags = request.tags ?: existingPrompt.tags,
+                category = request.category ?: existingPrompt.category,
+                isPublic = request.isPublic ?: existingPrompt.isPublic,
+                isFavorite = request.isFavorite ?: existingPrompt.isFavorite,
+                folderId = request.folderId ?: existingPrompt.folderId,
+                status = request.status?.let { PromptStatus.valueOf(it) } ?: existingPrompt.status
+            )
+            
+            val savedPrompt = promptService.updatePrompt(userId, id, updatedPrompt)
+            return ResponseEntity.ok(ApiResponse.success(PromptResponse.fromDomain(savedPrompt), "Prompt更新成功"))
+        } catch (e: Exception) {
+            log.error("更新Prompt失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("PROMPT_003", e.message ?: "更新Prompt失败"))
+        }
     }
     
     @DeleteMapping("/{id}")
     fun deletePrompt(
         @RequestHeader("X-User-ID") userId: String,
         @PathVariable id: String
-    ): ResponseEntity<Void> {
+    ): ResponseEntity<ApiResponse<Void>> {
         log.info("删除Prompt: $id")
-        promptService.deletePrompt(userId, id)
-        return ResponseEntity.noContent().build()
+        try {
+            promptService.deletePrompt(userId, id)
+            return ResponseEntity.ok(ApiResponse.success(null, "Prompt删除成功"))
+        } catch (e: Exception) {
+            log.error("删除Prompt失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("PROMPT_004", e.message ?: "删除Prompt失败"))
+        }
     }
     
     @PostMapping("/{id}/favorite")
     fun toggleFavorite(
         @RequestHeader("X-User-ID") userId: String,
         @PathVariable id: String
-    ): ResponseEntity<PromptResponse> {
+    ): ResponseEntity<ApiResponse<PromptResponse>> {
         log.info("切换收藏状态: $id")
-        val prompt = promptService.toggleFavorite(userId, id)
-        return ResponseEntity.ok(PromptResponse.fromDomain(prompt))
+        try {
+            val prompt = promptService.toggleFavorite(userId, id)
+            return ResponseEntity.ok(ApiResponse.success(PromptResponse.fromDomain(prompt), "收藏状态切换成功"))
+        } catch (e: Exception) {
+            log.error("切换收藏状态失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("PROMPT_005", e.message ?: "切换收藏状态失败"))
+        }
     }
     
     @GetMapping("/public")
@@ -105,23 +143,41 @@ class PromptController(
         @RequestParam(required = false) search: String?,
         @RequestParam(required = false) tags: List<String>?,
         pageable: Pageable
-    ): ResponseEntity<Page<PromptResponse>> {
+    ): ResponseEntity<ApiResponse<Page<PromptResponse>>> {
         log.info("获取公开Prompt列表")
-        val prompts = promptService.getPublicPrompts(search, tags, pageable)
-        return ResponseEntity.ok(prompts.map { PromptResponse.fromDomain(it) })
+        try {
+            val prompts = promptService.getPublicPrompts(search, tags, pageable)
+            return ResponseEntity.ok(ApiResponse.success(prompts.map { PromptResponse.fromDomain(it) }, "获取公开Prompt列表成功"))
+        } catch (e: Exception) {
+            log.error("获取公开Prompt列表失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("SYSTEM_002", e.message ?: "获取公开Prompt列表失败"))
+        }
     }
     
     @GetMapping("/tags")
-    fun getUserTags(@RequestHeader("X-User-ID") userId: String): ResponseEntity<List<String>> {
+    fun getUserTags(@RequestHeader("X-User-ID") userId: String): ResponseEntity<ApiResponse<List<String>>> {
         log.info("获取用户 $userId 的标签列表")
-        val tags = promptService.getUserTags(userId)
-        return ResponseEntity.ok(tags)
+        try {
+            val tags = promptService.getUserTags(userId)
+            return ResponseEntity.ok(ApiResponse.success(tags, "获取标签列表成功"))
+        } catch (e: Exception) {
+            log.error("获取标签列表失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("SYSTEM_003", e.message ?: "获取标签列表失败"))
+        }
     }
     
     @GetMapping("/stats")
-    fun getUserStats(@RequestHeader("X-User-ID") userId: String): ResponseEntity<Map<String, Any>> {
+    fun getUserStats(@RequestHeader("X-User-ID") userId: String): ResponseEntity<ApiResponse<Map<String, Any>>> {
         log.info("获取用户 $userId 的统计信息")
-        val stats = promptService.getUserStats(userId)
-        return ResponseEntity.ok(stats)
+        try {
+            val stats = promptService.getUserStats(userId)
+            return ResponseEntity.ok(ApiResponse.success(stats, "获取统计信息成功"))
+        } catch (e: Exception) {
+            log.error("获取统计信息失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("SYSTEM_004", e.message ?: "获取统计信息失败"))
+        }
     }
 }

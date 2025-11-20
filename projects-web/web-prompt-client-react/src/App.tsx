@@ -6,7 +6,7 @@ import { CreatePromptScreen } from "./components/CreatePromptScreen";
 import { PromptDetailScreen } from "./components/PromptDetailScreen";
 import { SearchScreen } from "./components/SearchScreen";
 import { ProfileScreen } from "./components/ProfileScreen";
-import { Toaster, toast } from "sonner@2.0.3";
+import { Toaster, toast } from "sonner";
 import api from "./services/api";
 import type { Prompt as ApiPrompt, User } from "./types/api";
 
@@ -154,6 +154,7 @@ export default function App() {
     setIsLoadingPrompts(true);
     try {
       const response = await api.prompt.getPrompts({ size: 100 });
+      // API返回的是 PageableResponse<Prompt> 格式
       const convertedPrompts = response.content.map(convertApiPrompt);
       setPrompts(convertedPrompts);
     } catch (error) {
@@ -169,16 +170,8 @@ export default function App() {
     setCurrentScreen("main");
     setCurrentView("main");
     
-    // 只有非游客用户才创建会话和加载远程数据
+    // 只有非游客用户才加载远程数据
     if (user.userType !== 'GUEST') {
-      // 创建会话
-      try {
-        await api.session.createSession(24);
-      } catch (error) {
-        console.error("创建会话失败:", error);
-        toast.error("创建会话失败，请检查网络连接");
-      }
-      
       // 加载Prompts
       await loadPrompts();
     } else {
@@ -211,6 +204,15 @@ export default function App() {
 
     // 真实用户：调用API
     try {
+      console.log("开始创建Prompt，请求数据:", {
+        title: prompt.title,
+        content: prompt.content,
+        tags: prompt.tags,
+        category: prompt.category,
+        isPublic: false,
+        folderId: prompt.folder,
+      });
+
       const newPrompt = await api.prompt.createPrompt({
         title: prompt.title,
         content: prompt.content,
@@ -219,11 +221,25 @@ export default function App() {
         isPublic: false,
         folderId: prompt.folder,
       });
+
+      console.log("API返回的newPrompt:", newPrompt);
       
-      setPrompts([convertApiPrompt(newPrompt), ...prompts]);
+      if (!newPrompt) {
+        throw new Error("API返回的Prompt数据为空");
+      }
+
+      if (!newPrompt.id) {
+        throw new Error("API返回的Prompt缺少id字段");
+      }
+
+      const convertedPrompt = convertApiPrompt(newPrompt);
+      console.log("转换后的Prompt:", convertedPrompt);
+      
+      setPrompts([convertedPrompt, ...prompts]);
       setCurrentScreen("main");
       toast.success("Prompt 创建成功！");
     } catch (error) {
+      console.error("创建Prompt失败:", error);
       toast.error("创建失败: " + (error instanceof Error ? error.message : "未知错误"));
     }
   };
