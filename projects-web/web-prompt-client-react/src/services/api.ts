@@ -149,7 +149,7 @@ async function request<T>(
     const data = await response.json();
 
     // 如果Token过期，尝试刷新
-    if (data.code === "AUTH_002" || response.status === 401) {
+    if ((data.code === "AUTH_002" || response.status === 401) && !endpoint.includes("/auth/refresh")) {
       const refreshToken = getRefreshToken();
       if (refreshToken) {
         try {
@@ -160,12 +160,19 @@ async function request<T>(
           headers["Authorization"] = `Bearer ${newTokens.accessToken}`;
           const retryResponse = await fetch(url, { ...options, headers });
           return await retryResponse.json();
-        } catch {
+        } catch (refreshError) {
+          console.error("Token刷新失败:", refreshError);
           // 刷新失败，清除令牌并跳转登录
           clearTokens();
-          window.location.href = "/";
+          // 使用replace而不是href，避免浏览器历史记录问题
+          window.location.replace("/");
           throw new Error("Token已过期，请重新登录");
         }
+      } else {
+        // 没有刷新令牌，直接跳转登录
+        clearTokens();
+        window.location.replace("/");
+        throw new Error("Token已过期，请重新登录");
       }
     }
 

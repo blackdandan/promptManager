@@ -69,7 +69,8 @@ app:
   # JWT配置
   jwt:
     secret: promptflow-secret-key-change-in-production
-    expiration: 3600 # 1小时
+    access-token-expiration: 3600    # 访问令牌：1小时
+    refresh-token-expiration: 2592000 # 刷新令牌：30天
     
   # 安全配置
   security:
