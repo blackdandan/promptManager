@@ -57,6 +57,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<"main" | "search" | "profile">("main");
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'favorites' | 'recent'>('all');
   const [folders, setFolders] = useState<ApiFolder[]>([]);
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -420,6 +421,33 @@ export default function App() {
     return folder?.name || folderId;
   };
 
+  // 根据筛选类型获取筛选后的prompts
+  const getFilteredPrompts = (): Prompt[] => {
+    let filtered = [...prompts];
+
+    // 根据筛选类型进行筛选
+    switch (filterType) {
+      case 'favorites':
+        filtered = filtered.filter(p => p.isFavorite);
+        break;
+      case 'recent':
+        // 按更新时间排序，显示最近更新的
+        filtered = [...filtered].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+        break;
+      case 'all':
+      default:
+        // 全部，不需要额外筛选
+        break;
+    }
+
+    // 文件夹筛选
+    if (selectedFolder) {
+      filtered = filtered.filter(p => p.folder === selectedFolder);
+    }
+
+    return filtered;
+  };
+
   // 初始加载中
   if (isLoading) {
     return (
@@ -450,11 +478,24 @@ export default function App() {
           folders={folders}
           currentView={currentView}
           selectedFolder={selectedFolder}
+          filterType={filterType}
           onViewChange={(view) => {
             setCurrentView(view);
             setCurrentScreen(view === "main" ? "main" : view);
+            // 重置筛选状态
+            setFilterType('all');
           }}
-          onFolderSelect={setSelectedFolder}
+          onFolderSelect={(folder) => {
+            setSelectedFolder(folder);
+            // 重置筛选状态
+            setFilterType('all');
+          }}
+          onFilterChange={(type) => {
+            setCurrentView("main");
+            setCurrentScreen("main");
+            setFilterType(type);
+            setSelectedFolder(null);
+          }}
           onCreateClick={() => setCurrentScreen("create")}
         />
 
@@ -462,9 +503,10 @@ export default function App() {
         <div className="flex-1 overflow-hidden">
           {currentScreen === "main" && (
             <MainScreen
-              prompts={prompts}
+              prompts={getFilteredPrompts()}
               selectedFolder={selectedFolder}
               selectedFolderName={getFolderName(selectedFolder)}
+              filterType={filterType}
               onPromptClick={(prompt) => {
                 setSelectedPrompt(prompt);
                 setCurrentScreen("detail");

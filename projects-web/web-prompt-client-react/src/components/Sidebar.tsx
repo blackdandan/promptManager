@@ -11,7 +11,8 @@ import {
   Settings, 
   ChevronRight,
   ChevronDown,
-  Home
+  Home,
+  Clock
 } from 'lucide-react';
 import { useState } from 'react';
 import type { Folder as ApiFolder } from '../types/api';
@@ -21,8 +22,10 @@ type SidebarProps = {
   folders: ApiFolder[];
   currentView: 'main' | 'search' | 'profile';
   selectedFolder: string | null;
+  filterType: 'all' | 'favorites' | 'recent';
   onViewChange: (view: 'main' | 'search' | 'profile') => void;
   onFolderSelect: (folder: string | null) => void;
+  onFilterChange: (type: 'all' | 'favorites' | 'recent') => void;
   onCreateClick: () => void;
 };
 
@@ -31,8 +34,10 @@ export function Sidebar({
   folders,
   currentView, 
   selectedFolder, 
+  filterType,
   onViewChange, 
   onFolderSelect,
+  onFilterChange,
   onCreateClick 
 }: SidebarProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -204,16 +209,22 @@ export function Sidebar({
           </Button>
 
           <Button
-            variant="ghost"
+            variant={filterType === 'favorites' ? 'secondary' : 'ghost'}
             className="w-full justify-start"
-            onClick={() => {
-              onViewChange('main');
-              onFolderSelect(null);
-            }}
+            onClick={() => onFilterChange('favorites')}
           >
             <Star className="w-4 h-4 mr-3" />
             收藏
             <span className="ml-auto text-xs text-gray-500">{favoriteCount}</span>
+          </Button>
+
+          <Button
+            variant={filterType === 'recent' ? 'secondary' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => onFilterChange('recent')}
+          >
+            <Clock className="w-4 h-4 mr-3" />
+            最近
           </Button>
 
           <Button

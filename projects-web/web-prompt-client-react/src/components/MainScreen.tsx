@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Prompt } from '../App';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
 import { Star, Clock, Copy, Search } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,6 +11,7 @@ type MainScreenProps = {
   prompts: Prompt[];
   selectedFolder: string | null;
   selectedFolderName: string;
+  filterType: 'all' | 'favorites' | 'recent';
   onPromptClick: (prompt: Prompt) => void;
   onToggleFavorite: (id: string) => void;
   isLoading?: boolean;
@@ -21,38 +21,25 @@ export function MainScreen({
   prompts, 
   selectedFolder,
   selectedFolderName,
+  filterType,
   onPromptClick, 
   onToggleFavorite,
   isLoading = false
 }: MainScreenProps) {
-  const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredPrompts = prompts
-    .filter(p => {
-      // 文件夹筛选
-      if (selectedFolder && p.folder !== selectedFolder) return false;
-      
-      // 标签筛选
-      if (activeTab === 'favorites' && !p.isFavorite) return false;
-      if (activeTab === 'recent') return true;
-      
-      // 搜索筛选
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        return (
-          p.title.toLowerCase().includes(query) ||
-          p.content.toLowerCase().includes(query) ||
-          p.tags.some(tag => tag.toLowerCase().includes(query))
-        );
-      }
-      
-      return true;
-    });
-
-  const sortedPrompts = activeTab === 'recent' 
-    ? [...filteredPrompts].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-    : filteredPrompts;
+  // 简化筛选逻辑，只处理搜索
+  const filteredPrompts = prompts.filter(p => {
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        p.title.toLowerCase().includes(query) ||
+        p.content.toLowerCase().includes(query) ||
+        p.tags.some(tag => tag.toLowerCase().includes(query))
+      );
+    }
+    return true;
+  });
 
   const handleQuickCopy = async (e: React.MouseEvent, content: string) => {
     e.stopPropagation();
@@ -94,14 +81,6 @@ export function MainScreen({
             </div>
           </div>
         </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">全部</TabsTrigger>
-            <TabsTrigger value="recent">最近</TabsTrigger>
-            <TabsTrigger value="favorites">收藏</TabsTrigger>
-          </TabsList>
-        </Tabs>
       </div>
 
       {/* Prompt List */}
@@ -113,7 +92,7 @@ export function MainScreen({
               <p className="text-gray-600">加载中...</p>
             </div>
           </div>
-        ) : sortedPrompts.length === 0 ? (
+        ) : filteredPrompts.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <p className="text-gray-400 text-lg mb-2">
@@ -127,7 +106,7 @@ export function MainScreen({
         ) : (
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {sortedPrompts.map((prompt) => (
+              {filteredPrompts.map((prompt) => (
                 <div
                   key={prompt.id}
                   onClick={() => onPromptClick(prompt)}
