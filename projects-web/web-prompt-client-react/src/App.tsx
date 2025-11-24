@@ -394,6 +394,105 @@ export default function App() {
     // 真实用户：可以调用API更新使用次数（如果后端有此接口）
   };
 
+  const handleCreateFolder = async (folderName: string, parentId?: string) => {
+    // 游客模式：本地处理
+    if (currentUser?.userType === 'GUEST') {
+      // 在游客模式下，我们使用文件夹路径作为ID
+      const newFolderId = parentId ? `${parentId}/${folderName}` : folderName;
+      const newFolder = {
+        id: newFolderId,
+        name: folderName,
+        parentId: parentId || null,
+        promptCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      setFolders([...folders, newFolder]);
+      toast.success('文件夹创建成功！');
+      return;
+    }
+
+    // 真实用户：调用API
+    try {
+      const newFolder = await api.folder.createFolder({ name: folderName, parentId });
+      setFolders([...folders, newFolder]);
+      toast.success('文件夹创建成功！');
+    } catch (error) {
+      toast.error('创建文件夹失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    }
+  };
+
+  const handleEditFolder = async (folderId: string, newName: string) => {
+    // 游客模式：本地处理
+    if (currentUser?.userType === 'GUEST') {
+      const updatedFolders = folders.map(folder => 
+        folder.id === folderId ? { ...folder, name: newName, updatedAt: new Date() } : folder
+      );
+      setFolders(updatedFolders);
+      toast.success('文件夹重命名成功！');
+      return;
+    }
+
+    // 真实用户：调用API
+    try {
+      const updatedFolder = await api.folder.updateFolder(folderId, { name: newName });
+      const updatedFolders = folders.map(folder => 
+        folder.id === folderId ? updatedFolder : folder
+      );
+      setFolders(updatedFolders);
+      toast.success('文件夹重命名成功！');
+    } catch (error) {
+      toast.error('重命名文件夹失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    }
+  };
+
+  const handleDeleteFolder = async (folderId: string) => {
+    // 游客模式：本地处理
+    if (currentUser?.userType === 'GUEST') {
+      // 检查是否有prompt在使用这个文件夹
+      const folderPrompts = prompts.filter(p => p.folder === folderId);
+      if (folderPrompts.length > 0) {
+        toast.error('无法删除非空文件夹，请先移动或删除文件夹中的Prompt');
+        return;
+      }
+
+      const updatedFolders = folders.filter(folder => folder.id !== folderId);
+      setFolders(updatedFolders);
+      toast.success('文件夹删除成功！');
+      return;
+    }
+
+    // 真实用户：调用API
+    try {
+      await api.folder.deleteFolder(folderId);
+      const updatedFolders = folders.filter(folder => folder.id !== folderId);
+      setFolders(updatedFolders);
+      toast.success('文件夹删除成功！');
+    } catch (error) {
+      toast.error('删除文件夹失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    }
+  };
+
+  const handleReorderFolder = async (folderId: string, newOrder: number) => {
+    // 游客模式：本地处理
+    if (currentUser?.userType === 'GUEST') {
+      // 在游客模式下，我们不实现拖拽排序，因为没有order字段
+      toast.info('游客模式下不支持文件夹拖拽排序');
+      return;
+    }
+
+    // 真实用户：调用API
+    try {
+      // 更新文件夹顺序
+      const updatedFolder = await api.folder.updateFolder(folderId, { order: newOrder });
+      const updatedFolders = folders.map(f => f.id === folderId ? updatedFolder : f);
+      setFolders(updatedFolders);
+      toast.success('文件夹排序更新成功！');
+    } catch (error) {
+      toast.error('更新文件夹排序失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await api.auth.logout();
@@ -497,6 +596,10 @@ export default function App() {
             setSelectedFolder(null);
           }}
           onCreateClick={() => setCurrentScreen("create")}
+          onCreateFolder={handleCreateFolder}
+          onEditFolder={handleEditFolder}
+          onDeleteFolder={handleDeleteFolder}
+          onReorderFolder={handleReorderFolder}
         />
 
         {/* Main Content */}

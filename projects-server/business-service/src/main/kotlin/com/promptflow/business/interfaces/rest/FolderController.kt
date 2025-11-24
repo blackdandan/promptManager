@@ -96,22 +96,30 @@ class FolderController(
         @PathVariable id: String,
         @RequestBody request: UpdateFolderRequest
     ): ResponseEntity<ApiResponse<FolderResponse>> {
-        log.info("更新文件夹: userId=$userId, folderId=$id")
+        log.info("更新文件夹: userId=$userId, folderId=$id, name=${request.name}, parentId=${request.parentId}, order=${request.order}")
         
         try {
             val userObjectId = ObjectId(userId)
             val folderObjectId = ObjectId(id)
             val parentObjectId = request.parentId?.let { ObjectId(it) }
             
-            val folder = folderService.updateFolder(userObjectId, folderObjectId, request.name, parentObjectId)
-            val response = FolderResponse.fromDomain(folder)
+            // 如果order字段有值，则更新排序，否则更新其他字段
+            val folder = if (request.order != null) {
+                folderService.updateFolderOrder(userObjectId, folderObjectId, request.order)
+            } else {
+                folderService.updateFolder(userObjectId, folderObjectId, request.name, parentObjectId)
+            }
             
-            return ResponseEntity.ok(ApiResponse.success(response, "文件夹更新成功"))
+            val response = FolderResponse.fromDomain(folder)
+            val message = if (request.order != null) "文件夹排序更新成功" else "文件夹更新成功"
+            
+            return ResponseEntity.ok(ApiResponse.success(response, message))
             
         } catch (e: IllegalArgumentException) {
             log.error("更新文件夹失败: ${e.message}")
+            val errorCode = if (request.order != null) "FOLDER_006" else "FOLDER_003"
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("FOLDER_003", e.message ?: "更新文件夹失败"))
+                .body(ApiResponse.error(errorCode, e.message ?: "更新文件夹失败"))
         } catch (e: Exception) {
             log.error("更新文件夹失败: ${e.message}")
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -223,7 +231,8 @@ data class CreateFolderRequest(
 
 data class UpdateFolderRequest(
     val name: String? = null,
-    val parentId: String? = null
+    val parentId: String? = null,
+    val order: Int? = null
 )
 
 data class FolderResponse(

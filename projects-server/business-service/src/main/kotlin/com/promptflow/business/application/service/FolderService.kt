@@ -56,8 +56,8 @@ class FolderService(
         return folderRepository.findByUserIdAndParentIdAndIsDeletedFalse(userId, parentId)
     }
     
-    fun updateFolder(userId: ObjectId, folderId: ObjectId, name: String? = null, parentId: ObjectId? = null): Folder {
-        log.info("更新文件夹: userId=$userId, folderId=$folderId, name=$name, parentId=$parentId")
+    fun updateFolder(userId: ObjectId, folderId: ObjectId, name: String? = null, parentId: ObjectId? = null, order: Int? = null): Folder {
+        log.info("更新文件夹: userId=$userId, folderId=$folderId, name=$name, parentId=$parentId, order=$order")
         
         val existingFolder = getFolderById(userId, folderId)
         
@@ -72,6 +72,7 @@ class FolderService(
         val updatedFolder = existingFolder.copy(
             name = name ?: existingFolder.name,
             parentId = parentId ?: existingFolder.parentId,
+            order = order ?: existingFolder.order,
             updatedAt = Instant.now()
         )
         

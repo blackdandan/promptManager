@@ -240,6 +240,7 @@ export interface CreateFolderRequest {
 export interface UpdateFolderRequest {
   name?: string;
   parentId?: string;
+  order?: number;
 }
 
 export interface FolderStats {
