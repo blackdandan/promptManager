@@ -444,6 +444,8 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 - `tags`: 标签筛选 (数组)
 - `category`: 分类筛选
 - `isFavorite`: 是否收藏
+- `folderId`: 文件夹ID (传入 `root` 可查询无文件夹的Prompt)
+- `sort`: 排序字段 (例如 `lastUsedAt,desc`)
 
 **响应:**
 ```json
@@ -744,6 +746,25 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
     "totalUsage": 120,
     "mostUsedTags": ["AI", "写作", "编程"]
   }
+}
+```
+
+### 5.10 使用Prompt
+
+**POST** `/prompts/{id}/use`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**路径参数:**
+- `id`: Prompt ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "更新使用次数成功",
+  "data": null
 }
 ```
 
