@@ -594,6 +594,7 @@ export default function App() {
             setSelectedFolder(folder);
             // 重置筛选状态
             setFilterType('all');
+            setCurrentScreen("main");
           }}
           onFilterChange={(type) => {
             setCurrentView("main");

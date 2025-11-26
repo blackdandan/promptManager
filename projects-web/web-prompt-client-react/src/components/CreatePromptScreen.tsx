@@ -11,6 +11,8 @@ import { X, Plus, Folder, ChevronRight, Sparkles, AlertCircle, Check, FolderOpen
 import { api } from '../services/api';
 import type { Folder as ApiFolder } from '../types/api';
 
+type FolderTreeNode = ApiFolder & { children: FolderTreeNode[] };
+
 type CreatePromptScreenProps = {
   prompt?: Prompt;
   onSave: (prompt: any) => void;
@@ -74,13 +76,13 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
   };
 
   // 构建文件夹树结构
-  const buildFolderTree = () => {
-    const folderMap = new Map<string, ApiFolder & { children: ApiFolder[] }>();
-    const rootFolders: (ApiFolder & { children: ApiFolder[] })[] = [];
+  const buildFolderTree = (): FolderTreeNode[] => {
+    const folderMap = new Map<string, FolderTreeNode>();
+    const rootFolders: FolderTreeNode[] = [];
 
     // 创建所有文件夹节点
     folders.forEach(folder => {
-      const node = {
+      const node: FolderTreeNode = {
         ...folder,
         children: []
       };
@@ -101,7 +103,7 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
     });
 
     // 排序
-    const sortFolders = (nodes: (ApiFolder & { children: ApiFolder[] })[]): (ApiFolder & { children: ApiFolder[] })[] => {
+    const sortFolders = (nodes: FolderTreeNode[]): FolderTreeNode[] => {
       return nodes.sort((a, b) => a.name.localeCompare(b.name));
     };
 
@@ -109,7 +111,7 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
   };
 
   // 渲染文件夹节点
-  const renderFolderNode = (node: ApiFolder & { children: ApiFolder[] }, level: number = 0) => {
+  const renderFolderNode = (node: FolderTreeNode, level: number = 0) => {
     const isSelected = folder === node.id;
     const hasChildren = node.children.length > 0;
     const isExpanded = expandedFolders.has(node.id);
@@ -504,6 +506,24 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
                 已达到标签数量上限
               </p>
             )}
+          </div>
+
+          {/* Bottom Actions */}
+          <div className="flex flex-col gap-3 pt-4 pb-8">
+            <Button 
+              onClick={handleSave} 
+              disabled={!title.trim() || !content.trim()}
+              className="w-full h-12 text-base font-medium shadow-sm"
+            >
+              保存 Prompt
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={onCancel} 
+              className="w-full h-12 text-base hover:bg-gray-100"
+            >
+              取消
+            </Button>
           </div>
         </div>
       </div>
