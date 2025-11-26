@@ -1,6 +1,7 @@
 package com.promptflow.user.domain.model
 
 import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
 import java.time.LocalDateTime
@@ -17,6 +18,7 @@ data class UserSession(
     val token: String,
     
     @Field("refresh_token")
+    @Indexed(unique = true, sparse = true)  // sparse = true allows multiple null values
     val refreshToken: String,
     
     @Field("expires_at")

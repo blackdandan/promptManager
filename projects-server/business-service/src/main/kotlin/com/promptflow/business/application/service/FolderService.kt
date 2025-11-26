@@ -1,6 +1,7 @@
 package com.promptflow.business.application.service
 
 import com.promptflow.business.domain.model.Folder
+import com.promptflow.business.domain.model.PromptStatus
 import com.promptflow.business.infrastructure.repository.FolderRepository
 import com.promptflow.business.infrastructure.repository.PromptRepository
 import org.bson.types.ObjectId
@@ -52,8 +53,9 @@ class FolderService(
     }
     
     private fun calculateFolderPromptCount(userId: ObjectId, folderId: ObjectId, allFolders: List<Folder>): Int {
-        // 获取当前文件夹直接包含的prompts数量
-        var count = promptRepository.findByUserIdAndFolderId(userId.toString(), folderId.toString()).size
+        // 获取当前文件夹直接包含的prompts数量（只计算活跃的prompts）
+        var count = promptRepository.findByUserIdAndFolderId(userId.toString(), folderId.toString())
+            .count { it.status == PromptStatus.ACTIVE }
         
         // 递归计算所有子文件夹的prompt数量
         val childFolders = allFolders.filter { it.parentId == folderId }
