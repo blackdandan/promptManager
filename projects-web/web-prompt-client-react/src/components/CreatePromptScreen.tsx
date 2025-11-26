@@ -19,11 +19,12 @@ type CreatePromptScreenProps = {
   onCancel: () => void;
   onFolderCreated?: () => void;
   existingPrompts?: Prompt[];
+  folders: ApiFolder[];
 };
 
 const categories = ['通用', '写作', '编程', '分析', '创意', '营销'];
 
-export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, existingPrompts = [] }: CreatePromptScreenProps) {
+export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, existingPrompts = [], folders }: CreatePromptScreenProps) {
   const [title, setTitle] = useState(prompt?.title || '');
   const [content, setContent] = useState(prompt?.content || '');
   const [category, setCategory] = useState(prompt?.category || '通用');
@@ -34,15 +35,28 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
   const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [detectedVariables, setDetectedVariables] = useState<string[]>([]);
-  const [folders, setFolders] = useState<ApiFolder[]>([]);
-  const [isLoadingFolders, setIsLoadingFolders] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
-  // 根据文件夹ID获取文件夹名称
-  const getFolderName = (folderId: string | null): string => {
+  // 根据文件夹ID获取文件夹完整路径
+  const getFolderPath = (folderId: string | null): string => {
     if (!folderId) return '';
-    const foundFolder = folders.find(f => f.id === folderId);
-    return foundFolder?.name || folderId;
+    const path: string[] = [];
+    let currentId: string | undefined = folderId;
+    
+    // 防止死循环
+    let depth = 0;
+    while (currentId && depth < 10) {
+      const folderItem = folders.find(f => f.id === currentId);
+      if (folderItem) {
+        path.unshift(folderItem.name);
+        currentId = folderItem.parentId || undefined;
+      } else {
+        if (path.length === 0 && currentId) path.push(currentId);
+        break;
+      }
+      depth++;
+    }
+    return path.join(' / ');
   };
 
   // 切换文件夹展开状态
@@ -56,44 +70,25 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
     setExpandedFolders(newExpanded);
   };
 
-  // 加载文件夹列表
-  useEffect(() => {
-    if (isFolderSelectOpen) {
-      loadFolders();
-    }
-  }, [isFolderSelectOpen]);
-
-  const loadFolders = async () => {
-    try {
-      setIsLoadingFolders(true);
-      const folderList = await api.folder.getFolders();
-      setFolders(folderList);
-    } catch (error) {
-      console.error('加载文件夹失败:', error);
-    } finally {
-      setIsLoadingFolders(false);
-    }
-  };
-
   // 构建文件夹树结构
   const buildFolderTree = (): FolderTreeNode[] => {
     const folderMap = new Map<string, FolderTreeNode>();
     const rootFolders: FolderTreeNode[] = [];
 
     // 创建所有文件夹节点
-    folders.forEach(folder => {
+    folders.forEach(folderItem => {
       const node: FolderTreeNode = {
-        ...folder,
+        ...folderItem,
         children: []
       };
-      folderMap.set(folder.id, node);
+      folderMap.set(folderItem.id, node);
     });
 
     // 构建层级关系
-    folders.forEach(folder => {
-      const node = folderMap.get(folder.id);
-      if (node && folder.parentId) {
-        const parent = folderMap.get(folder.parentId);
+    folders.forEach(folderItem => {
+      const node = folderMap.get(folderItem.id);
+      if (node && folderItem.parentId) {
+        const parent = folderMap.get(folderItem.parentId);
         if (parent) {
           parent.children.push(node);
         }
@@ -221,9 +216,8 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
       await api.folder.createFolder({ name: newFolderName.trim() });
       setNewFolderName('');
       setIsFolderDialogOpen(false);
-      await loadFolders(); // 重新加载文件夹列表
+      // 父组件 loadFolders 会通过 onFolderCreated 触发刷新，从而更新 props.folders
       
-      // 通知父组件刷新文件夹列表
       if (onFolderCreated) {
         onFolderCreated();
       }
@@ -261,17 +255,6 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
               已检测到 {detectedVariables.length} 个变量
             </p>
           )}
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onCancel}>
-            取消
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={!title.trim() || !content.trim()}
-          >
-            保存
-          </Button>
         </div>
       </div>
 
@@ -386,7 +369,7 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
                   <span className="flex items-center gap-2 truncate">
                     <Folder className="w-4 h-4 flex-shrink-0 text-gray-500" />
                     <span className="truncate">
-                      {folder ? getFolderName(folder) : '选择文件夹'}
+                      {folder ? getFolderPath(folder) : '选择文件夹'}
                     </span>
                   </span>
                   <ChevronRight className="w-4 h-4 flex-shrink-0" />
@@ -415,13 +398,7 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
                       </button>
 
                       {/* 文件夹列表 */}
-                      {isLoadingFolders ? (
-                        <div className="flex justify-center py-4">
-                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                        </div>
-                      ) : (
-                        buildFolderTree().map(node => renderFolderNode(node))
-                      )}
+                      {buildFolderTree().map(node => renderFolderNode(node))}
                     </div>
                   </div>
                   
@@ -444,7 +421,7 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
               {folder && (
                 <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
                   <ChevronRight className="w-3 h-3" />
-                  <span className="truncate">{getFolderName(folder)}</span>
+                  <span className="truncate">{getFolderPath(folder)}</span>
                 </div>
               )}
             </div>
@@ -507,24 +484,26 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
               </p>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Bottom Actions */}
-          <div className="flex flex-col gap-3 pt-4 pb-8">
-            <Button 
-              onClick={handleSave} 
-              disabled={!title.trim() || !content.trim()}
-              className="w-full h-12 text-base font-medium shadow-sm"
-            >
-              保存 Prompt
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={onCancel} 
-              className="w-full h-12 text-base hover:bg-gray-100"
-            >
-              取消
-            </Button>
-          </div>
+      {/* Footer Actions */}
+      <div className="bg-white border-t p-4 flex-shrink-0 z-10">
+        <div className="max-w-4xl mx-auto flex gap-3">
+          <Button 
+            variant="outline" 
+            onClick={onCancel} 
+            className="flex-1 h-12 text-base hover:bg-gray-100"
+          >
+            取消
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={!title.trim() || !content.trim()}
+            className="flex-1 h-12 text-base font-medium shadow-sm"
+          >
+            保存 Prompt
+          </Button>
         </div>
       </div>
 

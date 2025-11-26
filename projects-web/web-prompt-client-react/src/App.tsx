@@ -696,6 +696,7 @@ export default function App() {
               onCancel={() => setCurrentScreen("main")}
               onFolderCreated={loadFolders}
               existingPrompts={prompts}
+              folders={folders}
             />
           )}
 
@@ -705,6 +706,7 @@ export default function App() {
               onSave={handleEditPrompt}
               onCancel={() => setCurrentScreen("detail")}
               existingPrompts={prompts}
+              folders={folders}
             />
           )}
 
@@ -716,6 +718,7 @@ export default function App() {
               onDelete={handleDeletePrompt}
               onToggleFavorite={handleToggleFavorite}
               onUse={handleUsePrompt}
+              folders={folders}
             />
           )}
 

@@ -111,31 +111,30 @@ export function MainScreen({
       </div>
 
       {/* Prompt List */}
-      <div className="flex-1 overflow-y-auto flex flex-col">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-              <p className="text-gray-600">加载中...</p>
-            </div>
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            <p className="text-gray-600">加载中...</p>
           </div>
-        ) : prompts.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <p className="text-gray-400 text-lg mb-2">
-                {searchQuery ? '未找到匹配的 Prompt' : '暂无 Prompt'}
-              </p>
-              <p className="text-gray-400 text-sm">
-                {searchQuery ? '试试其他关键词' : '点击左侧按钮创建第一个 Prompt'}
-              </p>
-            </div>
+        </div>
+      ) : prompts.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-400 text-lg mb-2">
+              {searchQuery ? '未找到匹配的 Prompt' : '暂无 Prompt'}
+            </p>
+            <p className="text-gray-400 text-sm">
+              {searchQuery ? '试试其他关键词' : '点击左侧按钮创建第一个 Prompt'}
+            </p>
           </div>
-        ) : (
-          <>
-            <div className="p-6 flex-1">
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                {prompts.map((prompt) => (
-                  <ContextMenu key={prompt.id}>
+        </div>
+      ) : (
+        <>
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {prompts.map((prompt) => (
+                <ContextMenu key={prompt.id}>
                   <ContextMenuTrigger>
                     <div
                       onClick={() => onPromptClick(prompt)}
@@ -228,7 +227,7 @@ export function MainScreen({
             </div>
             
             {/* Pagination */}
-            <div className="border-t p-4 flex items-center justify-between bg-white flex-shrink-0">
+            <div className="border-t p-4 flex items-center justify-between bg-white flex-shrink-0 z-10 relative">
               <div className="text-sm text-gray-500">
                 共 {pagination.totalElements} 条 • 第 {pagination.page + 1} / {pagination.totalPages} 页
               </div>
@@ -254,8 +253,7 @@ export function MainScreen({
               </div>
             </div>
           </>
-        )}
-      </div>
+      )}
     </div>
   );
 }

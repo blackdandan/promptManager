@@ -25,8 +25,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { copyToClipboard } from '../utils/clipboard';
+import type { Folder as ApiFolder } from '../types/api';
 
 type PromptDetailScreenProps = {
   prompt: Prompt;
@@ -35,6 +36,7 @@ type PromptDetailScreenProps = {
   onDelete: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onUse: (id: string) => void;
+  folders: ApiFolder[];
 };
 
 export function PromptDetailScreen({ 
@@ -43,7 +45,8 @@ export function PromptDetailScreen({
   onEdit, 
   onDelete, 
   onToggleFavorite,
-  onUse 
+  onUse,
+  folders
 }: PromptDetailScreenProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
@@ -65,7 +68,7 @@ export function PromptDetailScreen({
   const handleReplaceVariables = () => {
     let content = prompt.content;
     Object.entries(variables).forEach(([key, value]) => {
-      content = content.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+      content = content.replace(new RegExp(`\\{${key}\\}`, 'g'), value as string);
     });
     setProcessedContent(content);
     setShowVariables(false);
@@ -104,6 +107,28 @@ export function PromptDetailScreen({
   const handleDelete = () => {
     onDelete(prompt.id);
     toast.success('已删除');
+  };
+
+  // 根据文件夹ID获取文件夹完整路径
+  const getFolderPath = (folderId: string | undefined): string => {
+    if (!folderId) return '';
+    const path: string[] = [];
+    let currentId: string | undefined = folderId;
+    
+    let depth = 0;
+    while (currentId && depth < 10) {
+      const folderItem = folders.find(f => f.id === currentId);
+      if (folderItem) {
+        path.unshift(folderItem.name);
+        currentId = folderItem.parentId || undefined;
+      } else {
+        // 如果找不到（可能是ID），如果path为空则显示ID
+        if (path.length === 0) path.push(currentId);
+        break;
+      }
+      depth++;
+    }
+    return path.join(' / ');
   };
 
   return (
@@ -156,7 +181,9 @@ export function PromptDetailScreen({
             <div className="flex gap-2 flex-wrap">
               <Badge variant="outline" className="text-sm">{prompt.category}</Badge>
               {prompt.folder && (
-                <Badge variant="secondary" className="text-sm">{prompt.folder.split('/').pop()}</Badge>
+                <Badge variant="secondary" className="text-sm">
+                  {getFolderPath(prompt.folder)}
+                </Badge>
               )}
               {prompt.tags.map((tag) => (
                 <Badge key={tag} variant="secondary" className="text-sm">
@@ -254,7 +281,7 @@ export function PromptDetailScreen({
 
           {prompt.folder && (
             <div className="text-sm text-gray-500 text-center py-4">
-              完整路径：{prompt.folder}
+              完整路径：{getFolderPath(prompt.folder)}
             </div>
           )}
         </div>
