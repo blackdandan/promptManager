@@ -8,7 +8,7 @@ import { SearchScreen } from "./components/SearchScreen";
 import { ProfileScreen } from "./components/ProfileScreen";
 import { Toaster, toast } from "sonner";
 import api from "./services/api";
-import type { Prompt as ApiPrompt, User, Folder as ApiFolder } from "./types/api";
+import type { Prompt as ApiPrompt, User, Folder as ApiFolder, PromptStats } from "./types/api";
 
 // 本地Prompt类型（为了兼容现有组件）
 export type Prompt = {
@@ -62,6 +62,17 @@ export default function App() {
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [isLoadingPrompts, setIsLoadingPrompts] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 20,
+    totalPages: 0,
+    totalElements: 0,
+    first: true,
+    last: true,
+  });
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [stats, setStats] = useState<PromptStats | null>(null);
 
   // 检查登录状态
   useEffect(() => {
@@ -75,13 +86,6 @@ export default function App() {
           setCurrentUser(user);
           setIsLoggedIn(true);
           setCurrentScreen("main");
-          
-          // 根据用户类型加载数据
-          if (user.userType === 'GUEST') {
-            loadLocalPrompts();
-          } else {
-            await loadPrompts();
-          }
         } catch (error) {
           console.error("自动登录失败:", error);
           localStorage.clear();
@@ -93,22 +97,67 @@ export default function App() {
     checkAuth();
   }, []);
 
+  // 加载Prompts Effect
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    // 游客模式
+    if (currentUser?.userType === 'GUEST') {
+      loadLocalPrompts();
+      return;
+    }
+
+    const fetchPrompts = async () => {
+      setIsLoadingPrompts(true);
+      try {
+        const response = await api.prompt.getPrompts({
+          page: pagination.page,
+          size: pagination.size,
+          folderId: selectedFolder || undefined,
+          search: searchQuery || undefined,
+          isFavorite: filterType === 'favorites' ? true : undefined,
+        });
+        setPrompts(response.content.map(convertApiPrompt));
+        setPagination(prev => ({
+          ...prev,
+          page: response.pageable.pageNumber,
+          totalPages: response.totalPages,
+          totalElements: response.totalElements,
+          first: response.first,
+          last: response.last
+        }));
+        
+        // 加载文件夹列表
+        await loadFolders();
+        
+        // 加载统计信息
+        const statsData = await api.prompt.getStats();
+        setStats(statsData);
+      } catch (error) {
+        toast.error("加载Prompts失败: " + (error instanceof Error ? error.message : "未知错误"));
+      } finally {
+        setIsLoadingPrompts(false);
+      }
+    };
+
+    fetchPrompts();
+  }, [isLoggedIn, currentUser, selectedFolder, filterType, searchQuery, pagination.page, refreshKey]);
+
   // 加载本地Prompts（游客模式）
   const loadLocalPrompts = () => {
     try {
       const localPromptsStr = localStorage.getItem("guest_prompts");
+      let localPrompts: Prompt[] = [];
       if (localPromptsStr) {
-        const localPrompts = JSON.parse(localPromptsStr);
-        // 将存储的字符串日期转换为Date对象
-        const parsedPrompts = localPrompts.map((p: any) => ({
+        const parsed = JSON.parse(localPromptsStr);
+        localPrompts = parsed.map((p: any) => ({
           ...p,
           createdAt: new Date(p.createdAt),
           updatedAt: new Date(p.updatedAt),
         }));
-        setPrompts(parsedPrompts);
       } else {
-        // 初始化一些示例数据
-        const mockPrompts: Prompt[] = [
+        // 初始化示例数据
+        localPrompts = [
           {
             id: "1",
             title: "文章改写助手",
@@ -134,9 +183,32 @@ export default function App() {
             updatedAt: new Date(),
           },
         ];
-        setPrompts(mockPrompts);
-        saveLocalPrompts(mockPrompts);
+        saveLocalPrompts(localPrompts);
       }
+
+      // 本地过滤和分页模拟
+      let filtered = localPrompts;
+      if (selectedFolder) filtered = filtered.filter(p => p.folder === selectedFolder);
+      if (filterType === 'favorites') filtered = filtered.filter(p => p.isFavorite);
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(p => 
+          p.title.toLowerCase().includes(q) || 
+          p.content.toLowerCase().includes(q)
+        );
+      }
+
+      // 更新状态
+      setPrompts(filtered);
+      setPagination(prev => ({
+        ...prev,
+        totalElements: filtered.length,
+        totalPages: Math.ceil(filtered.length / prev.size) || 1,
+        first: true, 
+        last: true // 简化处理，暂不支持本地分页
+      }));
+      
+      loadFolders(localPrompts); // 传入最新的本地prompts用于统计
     } catch (error) {
       console.error("加载本地数据失败:", error);
       setPrompts([]);
@@ -153,11 +225,12 @@ export default function App() {
   };
 
   // 加载文件夹列表
-  const loadFolders = async () => {
+  const loadFolders = async (currentLocalPrompts?: Prompt[]) => {
     if (currentUser?.userType === 'GUEST') {
       // 游客模式：从prompts中提取文件夹信息
+      const sourcePrompts = currentLocalPrompts || prompts;
       const folderSet = new Set<string>();
-      prompts.forEach(prompt => {
+      sourcePrompts.forEach(prompt => {
         if (prompt.folder) {
           folderSet.add(prompt.folder);
         }
@@ -166,7 +239,7 @@ export default function App() {
         id: folderPath,
         name: folderPath.split('/').pop() || folderPath,
         parentId: null,
-        promptCount: prompts.filter(p => p.folder === folderPath).length,
+        promptCount: sourcePrompts.filter(p => p.folder === folderPath).length,
         createdAt: new Date(),
         updatedAt: new Date()
       }));
@@ -186,39 +259,11 @@ export default function App() {
     }
   };
 
-  // 加载Prompts（真实用户）
-  const loadPrompts = async () => {
-    setIsLoadingPrompts(true);
-    try {
-      const response = await api.prompt.getPrompts({ size: 100 });
-      // API返回的是 PageableResponse<Prompt> 格式
-      const convertedPrompts = response.content.map(convertApiPrompt);
-      setPrompts(convertedPrompts);
-      
-      // 加载文件夹列表
-      await loadFolders();
-    } catch (error) {
-      toast.error("加载Prompts失败: " + (error instanceof Error ? error.message : "未知错误"));
-    } finally {
-      setIsLoadingPrompts(false);
-    }
-  };
-
   const handleLogin = async (user: User) => {
     setCurrentUser(user);
     setIsLoggedIn(true);
     setCurrentScreen("main");
     setCurrentView("main");
-    
-    // 只有非游客用户才加载远程数据
-    if (user.userType !== 'GUEST') {
-      // 加载Prompts
-      await loadPrompts();
-    } else {
-      // 游客模式：加载本地存储的数据
-      loadLocalPrompts();
-    }
-    
     toast.success("登录成功！");
   };
 
@@ -275,9 +320,8 @@ export default function App() {
       const convertedPrompt = convertApiPrompt(newPrompt);
       console.log("转换后的Prompt:", convertedPrompt);
       
-      setPrompts([convertedPrompt, ...prompts]);
-      // 刷新文件夹列表以更新计数
-      await loadFolders();
+      // 刷新列表
+      setRefreshKey(k => k + 1);
       setCurrentScreen("main");
       toast.success("Prompt 创建成功！");
     } catch (error) {
@@ -313,9 +357,8 @@ export default function App() {
         folderId: prompt.folder,
       });
       
-      setPrompts(prompts.map((p) => (p.id === prompt.id ? convertApiPrompt(updatedPrompt) : p)));
-      // 刷新文件夹列表以更新计数
-      await loadFolders();
+      // 刷新列表
+      setRefreshKey(k => k + 1);
       setCurrentScreen("detail");
       setSelectedPrompt(convertApiPrompt(updatedPrompt));
       toast.success("Prompt 更新成功！");
@@ -338,9 +381,8 @@ export default function App() {
     // 真实用户：调用API
     try {
       await api.prompt.deletePrompt(id);
-      setPrompts(prompts.filter((p) => p.id !== id));
-      // 刷新文件夹列表以更新计数
-      await loadFolders();
+      // 刷新列表
+      setRefreshKey(k => k + 1);
       setCurrentScreen("main");
       toast.success("Prompt 删除成功！");
     } catch (error) {
@@ -380,6 +422,9 @@ export default function App() {
         setSelectedPrompt(converted);
       }
       
+      // 更新统计信息
+      api.prompt.getStats().then(setStats).catch(console.error);
+
       toast.success(updatedPrompt.isFavorite ? "已添加到收藏" : "已取消收藏");
     } catch (error) {
       toast.error("操作失败: " + (error instanceof Error ? error.message : "未知错误"));
@@ -581,6 +626,7 @@ export default function App() {
         <Sidebar
           prompts={prompts}
           folders={folders}
+          stats={stats}
           currentView={currentView}
           selectedFolder={selectedFolder}
           filterType={filterType}
@@ -589,11 +635,15 @@ export default function App() {
             setCurrentScreen(view === "main" ? "main" : view);
             // 重置筛选状态
             setFilterType('all');
+            setSearchQuery("");
+            setPagination(p => ({...p, page: 0}));
           }}
           onFolderSelect={(folder) => {
             setSelectedFolder(folder);
             // 重置筛选状态
             setFilterType('all');
+            setSearchQuery("");
+            setPagination(p => ({...p, page: 0}));
             setCurrentScreen("main");
           }}
           onFilterChange={(type) => {
@@ -601,6 +651,8 @@ export default function App() {
             setCurrentScreen("main");
             setFilterType(type);
             setSelectedFolder(null);
+            setSearchQuery("");
+            setPagination(p => ({...p, page: 0}));
           }}
           onCreateClick={() => setCurrentScreen("create")}
           onCreateFolder={handleCreateFolder}
@@ -613,10 +665,17 @@ export default function App() {
         <div className="flex-1 overflow-hidden">
           {currentScreen === "main" && (
             <MainScreen
-              prompts={getFilteredPrompts()}
+              prompts={prompts}
               selectedFolder={selectedFolder}
               selectedFolderName={getFolderName(selectedFolder)}
               filterType={filterType}
+              searchQuery={searchQuery}
+              onSearchChange={(query) => {
+                setSearchQuery(query);
+                setPagination(p => ({...p, page: 0}));
+              }}
+              pagination={pagination}
+              onPageChange={(page) => setPagination(p => ({...p, page}))}
               onPromptClick={(prompt) => {
                 setSelectedPrompt(prompt);
                 setCurrentScreen("detail");

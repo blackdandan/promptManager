@@ -21,11 +21,12 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import type { Folder as ApiFolder } from '../types/api';
+import type { Folder as ApiFolder, PromptStats } from '../types/api';
 
 type SidebarProps = {
   prompts: Prompt[];
   folders: ApiFolder[];
+  stats?: PromptStats | null;
   currentView: 'main' | 'search' | 'profile';
   selectedFolder: string | null;
   filterType: 'all' | 'favorites' | 'recent';
@@ -42,6 +43,7 @@ type SidebarProps = {
 export function Sidebar({ 
   prompts, 
   folders,
+  stats,
   currentView, 
   selectedFolder, 
   filterType,
@@ -304,7 +306,10 @@ export function Sidebar({
 
 
   const { folderMap, rootFolders } = buildFolderTree();
-  const favoriteCount = prompts.filter(p => p.isFavorite).length;
+  
+  // 如果有后端统计数据则使用，否则（如游客模式）使用本地计算
+  const totalCount = stats ? stats.totalPrompts : prompts.length;
+  const favoriteCount = stats ? stats.favoritePrompts : prompts.filter(p => p.isFavorite).length;
 
   return (
     <div className="w-64 border-r bg-white flex flex-col h-screen">
@@ -336,7 +341,7 @@ export function Sidebar({
           >
             <Home className="w-4 h-4 mr-3" />
             全部 Prompts
-            <span className="ml-auto text-xs text-gray-500">{prompts.length}</span>
+            <span className="ml-auto text-xs text-gray-500">{totalCount}</span>
           </Button>
 
           <Button

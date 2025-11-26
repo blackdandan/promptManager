@@ -359,6 +359,7 @@ export const promptApi = {
     if (params.category) queryParams.append("category", params.category);
     if (params.isFavorite !== undefined)
       queryParams.append("isFavorite", String(params.isFavorite));
+    if (params.folderId) queryParams.append("folderId", params.folderId);
     if (params.tags) {
       params.tags.forEach((tag) => queryParams.append("tags", tag));
     }

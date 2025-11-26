@@ -36,7 +36,11 @@ interface PromptRepository : MongoRepository<Prompt, String> {
     
     fun countByUserId(userId: String): Long
     
+    fun countByUserIdAndStatus(userId: String, status: String): Long
+    
     fun countByUserIdAndIsFavorite(userId: String, isFavorite: Boolean): Long
+    
+    fun countByUserIdAndIsFavoriteAndStatus(userId: String, isFavorite: Boolean, status: String): Long
     
     @Query("{ 'user_id': ?0, 'tags': ?1 }")
     fun countByUserIdAndTag(userId: String, tag: String): Long

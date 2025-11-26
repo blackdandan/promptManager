@@ -196,8 +196,8 @@ class PromptService(
     }
     
     fun getUserStats(userId: String): Map<String, Any> {
-        val totalCount = promptRepository.countByUserId(userId)
-        val favoriteCount = promptRepository.countByUserIdAndIsFavorite(userId, true)
+        val totalCount = promptRepository.countByUserIdAndStatus(userId, PromptStatus.ACTIVE.name)
+        val favoriteCount = promptRepository.countByUserIdAndIsFavoriteAndStatus(userId, true, PromptStatus.ACTIVE.name)
         
         return mapOf(
             "totalPrompts" to totalCount,

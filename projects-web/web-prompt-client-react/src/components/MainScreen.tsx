@@ -3,7 +3,7 @@ import { Prompt } from '../App';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
-import { Star, Clock, Copy, Search, Share2, Trash2, Edit } from 'lucide-react';
+import { Star, Clock, Copy, Search, Share2, Trash2, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '../utils/clipboard';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, ContextMenuSeparator } from './ui/context-menu';
@@ -13,6 +13,16 @@ type MainScreenProps = {
   selectedFolder: string | null;
   selectedFolderName: string;
   filterType: 'all' | 'favorites' | 'recent';
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  pagination: {
+    page: number;
+    totalPages: number;
+    totalElements: number;
+    first: boolean;
+    last: boolean;
+  };
+  onPageChange: (page: number) => void;
   onPromptClick: (prompt: Prompt) => void;
   onToggleFavorite: (id: string) => void;
   onDelete?: (id: string) => void;
@@ -25,27 +35,16 @@ export function MainScreen({
   selectedFolder,
   selectedFolderName,
   filterType,
+  searchQuery,
+  onSearchChange,
+  pagination,
+  onPageChange,
   onPromptClick, 
   onToggleFavorite,
   onDelete,
   onEdit,
   isLoading = false
 }: MainScreenProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // 简化筛选逻辑，只处理搜索
-  const filteredPrompts = prompts.filter(p => {
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        p.title.toLowerCase().includes(query) ||
-        p.content.toLowerCase().includes(query) ||
-        p.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-    return true;
-  });
-
   const handleQuickCopy = async (e: React.MouseEvent | undefined, content: string) => {
     e?.stopPropagation();
     const success = await copyToClipboard(content);
@@ -103,7 +102,7 @@ export function MainScreen({
               <Input
                 placeholder="搜索 Prompt..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => onSearchChange(e.target.value)}
                 className="pl-9"
               />
             </div>
@@ -112,7 +111,7 @@ export function MainScreen({
       </div>
 
       {/* Prompt List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto flex flex-col">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -120,7 +119,7 @@ export function MainScreen({
               <p className="text-gray-600">加载中...</p>
             </div>
           </div>
-        ) : filteredPrompts.length === 0 ? (
+        ) : prompts.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <p className="text-gray-400 text-lg mb-2">
@@ -132,10 +131,11 @@ export function MainScreen({
             </div>
           </div>
         ) : (
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredPrompts.map((prompt) => (
-                <ContextMenu key={prompt.id}>
+          <>
+            <div className="p-6 flex-1">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {prompts.map((prompt) => (
+                  <ContextMenu key={prompt.id}>
                   <ContextMenuTrigger>
                     <div
                       onClick={() => onPromptClick(prompt)}
@@ -223,9 +223,37 @@ export function MainScreen({
                     </ContextMenuItem>
                   </ContextMenuContent>
                 </ContextMenu>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+            
+            {/* Pagination */}
+            <div className="border-t p-4 flex items-center justify-between bg-white flex-shrink-0">
+              <div className="text-sm text-gray-500">
+                共 {pagination.totalElements} 条 • 第 {pagination.page + 1} / {pagination.totalPages} 页
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onPageChange(pagination.page - 1)}
+                  disabled={pagination.first}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  上一页
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onPageChange(pagination.page + 1)}
+                  disabled={pagination.last}
+                >
+                  下一页
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

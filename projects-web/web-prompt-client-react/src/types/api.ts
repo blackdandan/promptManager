@@ -153,6 +153,7 @@ export interface PromptQueryParams {
   tags?: string[];
   category?: string;
   isFavorite?: boolean;
+  folderId?: string;
 }
 
 export interface PromptStats {
