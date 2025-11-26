@@ -62,7 +62,11 @@ class PromptService(
         
         // 文件夹过滤
         if (!folderId.isNullOrBlank()) {
-            query.addCriteria(Criteria.where("folder_id").`is`(folderId))
+            if (folderId == "root") {
+                query.addCriteria(Criteria.where("folder_id").`is`(null))
+            } else {
+                query.addCriteria(Criteria.where("folder_id").`is`(folderId))
+            }
         }
         
         // 只查询活跃的Prompt

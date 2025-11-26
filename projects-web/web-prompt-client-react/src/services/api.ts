@@ -363,6 +363,7 @@ export const promptApi = {
     if (params.tags) {
       params.tags.forEach((tag) => queryParams.append("tags", tag));
     }
+    if (params.sort) queryParams.append("sort", params.sort);
 
     const response = await request<PageableResponse<Prompt>>(
       `/prompts?${queryParams}`
@@ -453,6 +454,15 @@ export const promptApi = {
   async getStats(): Promise<PromptStats> {
     const response = await request<PromptStats>("/prompts/stats");
     return response.data;
+  },
+
+  /**
+   * 使用Prompt（更新使用次数）
+   */
+  async usePrompt(id: string): Promise<void> {
+    await request(`/prompts/${id}/use`, {
+      method: "POST",
+    });
   },
 };
 

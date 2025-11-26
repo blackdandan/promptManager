@@ -91,6 +91,7 @@ export function PromptDetailScreen({
           title: prompt.title,
           text: prompt.content
         });
+        onUse(prompt.id);
       } catch (err) {
         // 用户取消分享，不显示错误
       }
@@ -98,6 +99,7 @@ export function PromptDetailScreen({
       const success = await copyToClipboard(`${prompt.title}\n\n${prompt.content}`);
       if (success) {
         toast.success('分享内容已复制到剪贴板');
+        onUse(prompt.id);
       } else {
         toast.error('复制失败，请手动复制');
       }

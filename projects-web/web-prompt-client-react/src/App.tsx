@@ -112,10 +112,11 @@ export default function App() {
       try {
         const response = await api.prompt.getPrompts({
           page: pagination.page,
-          size: pagination.size,
+          size: filterType === 'recent' ? 30 : pagination.size,
           folderId: selectedFolder || undefined,
           search: searchQuery || undefined,
           isFavorite: filterType === 'favorites' ? true : undefined,
+          sort: filterType === 'recent' ? 'lastUsedAt,desc' : undefined
         });
         setPrompts(response.content.map(convertApiPrompt));
         setPagination(prev => ({
@@ -432,17 +433,28 @@ export default function App() {
   };
 
   const handleUsePrompt = async (id: string) => {
-    // 增加使用次数
+    // 增加使用次数 (乐观更新)
     const updatedPrompts = prompts.map((p) =>
       p.id === id ? { ...p, usageCount: p.usageCount + 1 } : p
     );
     setPrompts(updatedPrompts);
+
+    // 如果当前正在查看详情，也更新选中的prompt
+    if (selectedPrompt?.id === id) {
+      setSelectedPrompt(prev => prev ? ({ ...prev, usageCount: prev.usageCount + 1 }) : null);
+    }
     
     // 游客模式：保存到本地
     if (currentUser?.userType === 'GUEST') {
       saveLocalPrompts(updatedPrompts);
+    } else {
+      // 真实用户：调用API更新使用次数
+      try {
+        await api.prompt.usePrompt(id);
+      } catch (error) {
+        console.error("更新使用次数失败:", error);
+      }
     }
-    // 真实用户：可以调用API更新使用次数（如果后端有此接口）
   };
 
   const handleCreateFolder = async (folderName: string, parentId?: string) => {
@@ -686,6 +698,7 @@ export default function App() {
                 setSelectedPrompt(prompt);
                 setCurrentScreen("edit");
               }}
+              onUse={handleUsePrompt}
               isLoading={isLoadingPrompts}
             />
           )}

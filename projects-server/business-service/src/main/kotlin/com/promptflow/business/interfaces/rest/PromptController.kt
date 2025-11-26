@@ -198,4 +198,20 @@ class PromptController(
                 .body(ApiResponse.error("SYSTEM_004", e.message ?: "获取统计信息失败"))
         }
     }
+
+    @PostMapping("/{id}/use")
+    fun usePrompt(
+        @RequestHeader("X-User-ID") userId: String,
+        @PathVariable id: String
+    ): ResponseEntity<ApiResponse<Void>> {
+        log.info("使用Prompt: $id")
+        try {
+            promptService.incrementUsageCount(userId, id)
+            return ResponseEntity.ok(ApiResponse.success(null, "更新使用次数成功"))
+        } catch (e: Exception) {
+            log.error("更新使用次数失败: ${e.message}")
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("PROMPT_006", e.message ?: "更新使用次数失败"))
+        }
+    }
 }

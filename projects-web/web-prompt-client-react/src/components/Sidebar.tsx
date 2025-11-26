@@ -394,6 +394,19 @@ export function Sidebar({
               <Plus className="w-3 h-3 text-gray-500" />
             </button>
           </div>
+
+          {/* Default Folder Item */}
+          <div
+            className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors mb-1 ${
+              selectedFolder === "root" ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+            }`}
+            onClick={() => onFolderSelect("root")}
+            style={{ paddingLeft: '12px' }}
+          >
+             <div className="w-4" />
+             <Folder className={`w-4 h-4 ${selectedFolder === "root" ? 'text-blue-600' : 'text-gray-500'}`} />
+             <span className="flex-1 text-sm truncate">默认文件夹</span>
+          </div>
           
           {rootFolders.length > 0 ? (
             <div className="space-y-0.5">

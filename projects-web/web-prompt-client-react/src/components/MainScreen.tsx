@@ -27,6 +27,7 @@ type MainScreenProps = {
   onToggleFavorite: (id: string) => void;
   onDelete?: (id: string) => void;
   onEdit?: (prompt: Prompt) => void;
+  onUse?: (id: string) => void;
   isLoading?: boolean;
 };
 
@@ -43,13 +44,22 @@ export function MainScreen({
   onToggleFavorite,
   onDelete,
   onEdit,
+  onUse,
   isLoading = false
 }: MainScreenProps) {
-  const handleQuickCopy = async (e: React.MouseEvent | undefined, content: string) => {
+  const handleQuickCopy = async (e: React.MouseEvent | undefined, prompt: Prompt) => {
     e?.stopPropagation();
-    const success = await copyToClipboard(content);
+    console.log('Copying prompt:', prompt.id, 'onUse exists:', !!onUse);
+    const success = await copyToClipboard(prompt.content);
+    console.log('Copy success:', success);
     if (success) {
       toast.success('已复制到剪贴板');
+      if (onUse) {
+        console.log('Calling onUse for:', prompt.id);
+        onUse(prompt.id);
+      } else {
+        console.error('onUse is undefined');
+      }
     } else {
       toast.error('复制失败，请手动复制');
     }
@@ -66,6 +76,7 @@ export function MainScreen({
     const shareText = `${prompt.title}\n\n${prompt.content}`;
     copyToClipboard(shareText);
     toast.success('Prompt 内容已复制，可直接粘贴分享');
+    onUse?.(prompt.id);
   };
 
   const handleDelete = (e: React.MouseEvent | undefined, id: string, title: string) => {
@@ -191,7 +202,7 @@ export function MainScreen({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => handleQuickCopy(e, prompt.content)}
+                            onClick={(e) => handleQuickCopy(e, prompt)}
                           >
                             <Copy className="w-3.5 h-3.5" />
                           </Button>
@@ -208,7 +219,7 @@ export function MainScreen({
                       <Edit className="w-4 h-4 mr-2" />
                       编辑
                     </ContextMenuItem>
-                    <ContextMenuItem onClick={(e) => handleQuickCopy(e, prompt.content)}>
+                    <ContextMenuItem onClick={(e) => handleQuickCopy(e, prompt)}>
                       <Copy className="w-4 h-4 mr-2" />
                       复制内容
                     </ContextMenuItem>

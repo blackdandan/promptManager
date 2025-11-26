@@ -154,6 +154,7 @@ export interface PromptQueryParams {
   category?: string;
   isFavorite?: boolean;
   folderId?: string;
+  sort?: string;
 }
 
 export interface PromptStats {
