@@ -20,6 +20,7 @@ import {
   GripVertical
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import type { Folder as ApiFolder } from '../types/api';
 
 type SidebarProps = {
@@ -74,7 +75,11 @@ export function Sidebar({
     }
   };
 
-  const handleCreateSubFolder = (parentId: string, parentName: string) => {
+  const handleCreateSubFolder = (parentId: string, parentName: string, parentLevel: number = 0) => {
+    if (parentLevel >= 2) {
+      toast.error('最多创建3级目录');
+      return;
+    }
     const subFolderName = prompt(`请输入 "${parentName}" 的子文件夹名称:`);
     if (subFolderName && subFolderName.trim()) {
       if (onCreateFolder) {
@@ -284,7 +289,7 @@ export function Sidebar({
             <Edit className="w-4 h-4 mr-2" />
             重命名
           </ContextMenuItem>
-          <ContextMenuItem onClick={() => handleCreateSubFolder(node.path, node.name)}>
+          <ContextMenuItem onClick={() => handleCreateSubFolder(node.path, node.name, node.level)}>
             <Plus className="w-4 h-4 mr-2" />
             新建子文件夹
           </ContextMenuItem>
