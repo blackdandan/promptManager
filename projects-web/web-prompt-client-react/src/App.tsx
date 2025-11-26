@@ -276,6 +276,8 @@ export default function App() {
       console.log("转换后的Prompt:", convertedPrompt);
       
       setPrompts([convertedPrompt, ...prompts]);
+      // 刷新文件夹列表以更新计数
+      await loadFolders();
       setCurrentScreen("main");
       toast.success("Prompt 创建成功！");
     } catch (error) {
@@ -312,6 +314,8 @@ export default function App() {
       });
       
       setPrompts(prompts.map((p) => (p.id === prompt.id ? convertApiPrompt(updatedPrompt) : p)));
+      // 刷新文件夹列表以更新计数
+      await loadFolders();
       setCurrentScreen("detail");
       setSelectedPrompt(convertApiPrompt(updatedPrompt));
       toast.success("Prompt 更新成功！");
@@ -335,6 +339,8 @@ export default function App() {
     try {
       await api.prompt.deletePrompt(id);
       setPrompts(prompts.filter((p) => p.id !== id));
+      // 刷新文件夹列表以更新计数
+      await loadFolders();
       setCurrentScreen("main");
       toast.success("Prompt 删除成功！");
     } catch (error) {
