@@ -42,7 +42,26 @@ class FolderService(
     
     fun getUserFolders(userId: ObjectId): List<Folder> {
         log.info("获取用户文件夹列表: userId=$userId")
-        return folderRepository.findByUserIdAndIsDeletedFalseOrderByOrderAsc(userId)
+        val allFolders = folderRepository.findByUserIdAndIsDeletedFalseOrderByOrderAsc(userId)
+        
+        // 构建文件夹树结构并计算每个文件夹的promptCount
+        return allFolders.map { folder ->
+            val totalPromptCount = calculateFolderPromptCount(userId, folder.id!!, allFolders)
+            folder.copy(promptCount = totalPromptCount)
+        }
+    }
+    
+    private fun calculateFolderPromptCount(userId: ObjectId, folderId: ObjectId, allFolders: List<Folder>): Int {
+        // 获取当前文件夹直接包含的prompts数量
+        var count = promptRepository.findByUserIdAndFolderId(userId.toString(), folderId.toString()).size
+        
+        // 递归计算所有子文件夹的prompt数量
+        val childFolders = allFolders.filter { it.parentId == folderId }
+        childFolders.forEach { childFolder ->
+            count += calculateFolderPromptCount(userId, childFolder.id!!, allFolders)
+        }
+        
+        return count
     }
     
     fun getFolderById(userId: ObjectId, folderId: ObjectId): Folder {
@@ -126,13 +145,14 @@ class FolderService(
         log.info("获取文件夹统计: userId=$userId, folderId=$folderId")
         
         val folder = getFolderById(userId, folderId)
-        val prompts = promptRepository.findByUserIdAndFolderId(userId.toString(), folderId.toString())
+        val allFolders = folderRepository.findByUserIdAndIsDeletedFalseOrderByOrderAsc(userId)
+        val totalPromptCount = calculateFolderPromptCount(userId, folderId, allFolders)
         val childFolderCount = folderRepository.countByUserIdAndParentIdAndIsDeletedFalse(userId, folderId)
         
         return mapOf(
             "folderId" to folderId.toString(),
             "name" to folder.name,
-            "promptCount" to prompts.size,
+            "promptCount" to totalPromptCount,
             "childFolderCount" to childFolderCount,
             "createdAt" to folder.createdAt,
             "updatedAt" to folder.updatedAt
