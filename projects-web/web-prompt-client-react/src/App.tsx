@@ -622,6 +622,11 @@ export default function App() {
                 setCurrentScreen("detail");
               }}
               onToggleFavorite={handleToggleFavorite}
+              onDelete={handleDeletePrompt}
+              onEdit={(prompt) => {
+                setSelectedPrompt(prompt);
+                setCurrentScreen("edit");
+              }}
               isLoading={isLoadingPrompts}
             />
           )}
