@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Prompt } from '../App';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -29,6 +29,10 @@ type MainScreenProps = {
   onEdit?: (prompt: Prompt) => void;
   onUse?: (id: string) => void;
   isLoading?: boolean;
+  draggingPromptId?: string | null;
+  onPromptDragStart?: (promptId: string) => void;
+  onPromptDragEnd?: () => void;
+  isOverFolder?: boolean;
 };
 
 export function MainScreen({ 
@@ -45,7 +49,11 @@ export function MainScreen({
   onDelete,
   onEdit,
   onUse,
-  isLoading = false
+  isLoading = false,
+  draggingPromptId = null,
+  onPromptDragStart,
+  onPromptDragEnd,
+  isOverFolder = false
 }: MainScreenProps) {
   const handleQuickCopy = async (e: React.MouseEvent | undefined, prompt: Prompt) => {
     e?.stopPropagation();
@@ -94,8 +102,23 @@ export function MainScreen({
     }
   };
 
+  const handleForbiddenDragOver = (e: React.DragEvent) => {
+    if (!draggingPromptId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'none';
+  };
+
+  const handleForbiddenDrop = (e: React.DragEvent) => {
+    if (!draggingPromptId) return;
+    e.preventDefault();
+  };
+
   return (
-    <div className="h-full flex flex-col bg-white overflow-hidden">
+    <div 
+      className="h-full flex flex-col bg-white overflow-hidden"
+      onDragOver={handleForbiddenDragOver}
+      onDrop={handleForbiddenDrop}
+    >
       {/* Header */}
       <div className="border-b px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
@@ -149,7 +172,24 @@ export function MainScreen({
                   <ContextMenuTrigger>
                     <div
                       onClick={() => onPromptClick(prompt)}
-                      className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group"
+                      className={`bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group ${
+                        draggingPromptId === prompt.id
+                          ? isOverFolder
+                            ? 'scale-90 opacity-60'
+                            : 'opacity-80'
+                          : ''
+                      }`}
+                      draggable
+                      onDragStart={(e) => {
+                        e.stopPropagation();
+                        e.dataTransfer.setData('text/plain', prompt.id);
+                        e.dataTransfer.effectAllowed = 'move';
+                        onPromptDragStart?.(prompt.id);
+                      }}
+                      onDragEnd={(e) => {
+                        e.stopPropagation();
+                        onPromptDragEnd?.();
+                      }}
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">

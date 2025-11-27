@@ -73,6 +73,9 @@ export default function App() {
   });
   const [refreshKey, setRefreshKey] = useState(0);
   const [stats, setStats] = useState<PromptStats | null>(null);
+  const [draggingPromptId, setDraggingPromptId] = useState<string | null>(null);
+  const [dropTargetFolder, setDropTargetFolder] = useState<string | null>(null);
+  const isOverFolder = Boolean(dropTargetFolder);
 
   // 检查登录状态
   useEffect(() => {
@@ -259,6 +262,83 @@ export default function App() {
       setIsLoadingFolders(false);
     }
   };
+
+  const handlePromptDragStart = (promptId: string) => {
+    setDraggingPromptId(promptId);
+  };
+
+  const resetPromptDragState = () => {
+    setDraggingPromptId(null);
+    setDropTargetFolder(null);
+  };
+
+  const handlePromptDragEnd = () => {
+    resetPromptDragState();
+  };
+
+  const handleFolderDragTargetChange = (folderId: string | null) => {
+    setDropTargetFolder(folderId);
+  };
+
+  const handlePromptMoveToFolder = async (folderId: string) => {
+    if (!draggingPromptId) return;
+    const promptToMove = prompts.find(p => p.id === draggingPromptId);
+    if (!promptToMove) {
+      resetPromptDragState();
+      return;
+    }
+
+    if (promptToMove.folder === folderId) {
+      toast.info('该 Prompt 已在目标文件夹中');
+      resetPromptDragState();
+      return;
+    }
+
+    // 游客模式
+    if (currentUser?.userType === 'GUEST') {
+      const updatedPrompts = prompts.map(p =>
+        p.id === draggingPromptId ? { ...p, folder: folderId } : p
+      );
+      setPrompts(updatedPrompts);
+      saveLocalPrompts(updatedPrompts);
+      await loadFolders(updatedPrompts);
+      setSelectedFolder(folderId);
+      setCurrentView('main');
+      setCurrentScreen('main');
+      setPagination(p => ({ ...p, page: 0 }));
+      toast.success('Prompt 已移动到新的文件夹');
+      resetPromptDragState();
+      return;
+    }
+
+    try {
+      await api.prompt.updatePrompt(draggingPromptId, { folderId });
+      setPrompts(prev =>
+        prev.map(p => (p.id === draggingPromptId ? { ...p, folder: folderId } : p))
+      );
+      setSelectedFolder(folderId);
+      setCurrentView('main');
+      setCurrentScreen('main');
+      setPagination(p => ({ ...p, page: 0 }));
+      toast.success('Prompt 已移动到新的文件夹');
+      setRefreshKey(k => k + 1);
+    } catch (error) {
+      toast.error('移动失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    } finally {
+      resetPromptDragState();
+    }
+  };
+
+  useEffect(() => {
+    if (!draggingPromptId) {
+      document.body.style.cursor = '';
+      return;
+    }
+    document.body.style.cursor = isOverFolder ? 'grabbing' : 'not-allowed';
+    return () => {
+      document.body.style.cursor = '';
+    };
+  }, [draggingPromptId, isOverFolder]);
 
   const handleLogin = async (user: User) => {
     setCurrentUser(user);
@@ -671,6 +751,10 @@ export default function App() {
           onEditFolder={handleEditFolder}
           onDeleteFolder={handleDeleteFolder}
           onReorderFolder={handleReorderFolder}
+          draggingPromptId={draggingPromptId}
+          dropTargetFolder={dropTargetFolder}
+          onFolderDrop={handlePromptMoveToFolder}
+          onFolderDragTargetChange={handleFolderDragTargetChange}
         />
 
         {/* Main Content */}
@@ -700,6 +784,10 @@ export default function App() {
               }}
               onUse={handleUsePrompt}
               isLoading={isLoadingPrompts}
+              draggingPromptId={draggingPromptId}
+              onPromptDragStart={handlePromptDragStart}
+              onPromptDragEnd={handlePromptDragEnd}
+              isOverFolder={isOverFolder}
             />
           )}
 

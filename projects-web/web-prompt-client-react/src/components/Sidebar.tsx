@@ -38,6 +38,10 @@ type SidebarProps = {
   onEditFolder?: (folderId: string, newName: string) => void;
   onDeleteFolder?: (folderId: string) => void;
   onReorderFolder?: (folderId: string, newOrder: number) => void;
+  draggingPromptId?: string | null;
+  dropTargetFolder?: string | null;
+  onFolderDrop?: (folderId: string) => void;
+  onFolderDragTargetChange?: (folderId: string | null) => void;
 };
 
 export function Sidebar({ 
@@ -54,10 +58,15 @@ export function Sidebar({
   onCreateFolder,
   onEditFolder,
   onDeleteFolder,
-  onReorderFolder
+  onReorderFolder,
+  draggingPromptId = null,
+  dropTargetFolder = null,
+  onFolderDrop,
+  onFolderDragTargetChange
 }: SidebarProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [draggedFolder, setDraggedFolder] = useState<{id: string, index: number} | null>(null);
+  const isPromptDragging = Boolean(draggingPromptId);
 
   const handleEditFolder = (folderId: string, currentName: string) => {
     const newName = prompt('请输入新的文件夹名称:', currentName);
@@ -205,6 +214,15 @@ export function Sidebar({
     setExpandedFolders(newExpanded);
   };
 
+  const ensureFolderExpanded = (path: string) => {
+    setExpandedFolders(prev => {
+      if (prev.has(path)) return prev;
+      const next = new Set(prev);
+      next.add(path);
+      return next;
+    });
+  };
+
   const renderFolderNode = (path: string, folderMap: Map<string, any>, parentId?: string) => {
     const node = folderMap.get(path);
     if (!node) return null;
@@ -212,6 +230,7 @@ export function Sidebar({
     const isExpanded = expandedFolders.has(node.path);
     const isSelected = selectedFolder === node.path;
     const hasChildren = node.children.length > 0;
+    const isDropTarget = dropTargetFolder === node.path;
 
     return (
       <ContextMenu>
@@ -219,7 +238,11 @@ export function Sidebar({
           <div key={node.path}>
             <div
               className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors group ${
-                isSelected ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+                isDropTarget
+                  ? 'bg-blue-50 text-blue-700 ring-2 ring-blue-400 ring-offset-1'
+                  : isSelected
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'hover:bg-gray-100'
               }`}
               style={{ paddingLeft: `${12 + node.level * 16}px` }}
               onClick={() => onFolderSelect(node.path)}
@@ -231,15 +254,40 @@ export function Sidebar({
                   (folderMap.get(parentId)?.children || rootFolders) : 
                   rootFolders;
                 setDraggedFolder({id: node.path, index: siblings.indexOf(node.path)});
+                if (!isPromptDragging) {
+                  e.dataTransfer.effectAllowed = 'move';
+                }
               }}
               onDragOver={(e) => {
                 e.preventDefault();
+                e.dataTransfer.dropEffect = isPromptDragging ? 'move' : 'copy';
+              }}
+              onDragEnter={(e) => {
+                if (!isPromptDragging) return;
+                e.preventDefault();
+                if (hasChildren && !isExpanded) {
+                  ensureFolderExpanded(node.path);
+                }
+                onFolderDragTargetChange?.(node.path);
+              }}
+              onDragLeave={(e) => {
+                if (!isPromptDragging) return;
+                const related = e.relatedTarget as Node | null;
+                if (!related || !e.currentTarget.contains(related)) {
+                  if (dropTargetFolder === node.path) {
+                    onFolderDragTargetChange?.(null);
+                  }
+                }
               }}
               onDrop={(e) => {
                 e.preventDefault();
+                if (isPromptDragging) {
+                  onFolderDragTargetChange?.(null);
+                  onFolderDrop?.(node.path);
+                  return;
+                }
                 const draggedId = e.dataTransfer.getData('text/plain');
                 if (draggedId && draggedId !== node.path) {
-                  // 获取同级兄弟节点
                   const siblings = parentId ? 
                     (folderMap.get(parentId)?.children || rootFolders) : 
                     rootFolders;
@@ -312,7 +360,21 @@ export function Sidebar({
   const favoriteCount = stats ? stats.favoritePrompts : prompts.filter(p => p.isFavorite).length;
 
   return (
-    <div className="w-64 border-r bg-white flex flex-col h-screen">
+    <div 
+      className="w-64 border-r bg-white flex flex-col h-screen"
+      onDragOver={(e) => {
+        if (!isPromptDragging) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = dropTargetFolder ? 'move' : 'none';
+      }}
+      onDragLeave={(e) => {
+        if (!isPromptDragging) return;
+        const related = e.relatedTarget as Node | null;
+        if (!related || !e.currentTarget.contains(related)) {
+          onFolderDragTargetChange?.(null);
+        }
+      }}
+    >
       {/* Logo/Header */}
       <div className="p-4 border-b">
         <h1 className="text-xl font-semibold">Prompt Manager</h1>
