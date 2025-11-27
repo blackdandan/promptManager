@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -euo pipefail
+
+MONGO_ROOT="/usr/local/mongodb"
+BIN_PATH="$MONGO_ROOT/bin/mongod"
+DATA_PATH="$MONGO_ROOT/data"
+LOG_DIR="$MONGO_ROOT/logs"
+LOG_FILE="$LOG_DIR/mongod.log"
+
+if [[ ! -x "$BIN_PATH" ]]; then
+  echo "未找到 mongod 可执行文件：$BIN_PATH"
+  exit 1
+fi
+
+mkdir -p "$DATA_PATH" "$LOG_DIR"
+
+if pgrep -f "$BIN_PATH" >/dev/null; then
+  echo "mongod 已在运行，无需重复启动。"
+  exit 0
+fi
+
+echo "以后台方式启动 mongod，日志输出：$LOG_FILE"
+nohup "$BIN_PATH" \
+  --dbpath "$DATA_PATH" \
+  --logpath "$LOG_FILE" \
+  --bind_ip_all \
+  >>"$LOG_FILE" 2>&1 &
+
+sleep 2
+
+if pgrep -f "$BIN_PATH" >/dev/null; then
+  echo "mongod 启动成功 (PID: $(pgrep -f "$BIN_PATH" | tr '\n' ' '))."
+  exit 0
+else
+  echo "mongod 启动失败，查看日志：$LOG_FILE"
+  exit 1
+fi
+
