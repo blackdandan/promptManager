@@ -8,6 +8,7 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { X, Plus, Folder, ChevronRight, Sparkles, AlertCircle, Check, FolderOpen } from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '../services/api';
 import type { Folder as ApiFolder } from '../types/api';
 
@@ -34,8 +35,30 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [selectedFolderInDialog, setSelectedFolderInDialog] = useState<string | null>(null);
   const [detectedVariables, setDetectedVariables] = useState<string[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+
+  // 获取文件夹深度
+  const getFolderDepth = (folderId: string | null): number => {
+    if (!folderId) return 0;
+    let depth = 1;
+    let currentId: string | undefined = folderId;
+    
+    // 防止死循环
+    let safety = 0;
+    while (currentId && safety < 10) {
+      const folderItem = folders.find(f => f.id === currentId);
+      if (folderItem && folderItem.parentId) {
+        depth++;
+        currentId = folderItem.parentId;
+      } else {
+        break;
+      }
+      safety++;
+    }
+    return depth;
+  };
 
   // 根据文件夹ID获取文件夹完整路径
   const getFolderPath = (folderId: string | null): string => {
@@ -107,7 +130,7 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
 
   // 渲染文件夹节点
   const renderFolderNode = (node: FolderTreeNode, level: number = 0) => {
-    const isSelected = folder === node.id;
+    const isSelected = selectedFolderInDialog === node.id;
     const hasChildren = node.children.length > 0;
     const isExpanded = expandedFolders.has(node.id);
 
@@ -208,27 +231,49 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) {
-      alert('请输入文件夹名称');
+      toast.error('请输入文件夹名称');
       return;
     }
 
     try {
-      await api.folder.createFolder({ name: newFolderName.trim() });
+      const newFolder = await api.folder.createFolder({ 
+        name: newFolderName.trim(),
+        parentId: selectedFolderInDialog || undefined
+      });
+      
       setNewFolderName('');
       setIsFolderDialogOpen(false);
-      // 父组件 loadFolders 会通过 onFolderCreated 触发刷新，从而更新 props.folders
       
+      // 选中新建的文件夹
+      setSelectedFolderInDialog(newFolder.id);
+      
+      // 如果是在某个文件夹下创建，展开该父文件夹
+      if (newFolder.parentId) {
+        setExpandedFolders(prev => {
+          const next = new Set(prev);
+          next.add(newFolder.parentId!);
+          return next;
+        });
+      }
+
+      toast.success('文件夹创建成功');
+
+      // 父组件 loadFolders 会通过 onFolderCreated 触发刷新，从而更新 props.folders
       if (onFolderCreated) {
         onFolderCreated();
       }
     } catch (error) {
       console.error('创建文件夹失败:', error);
-      alert('创建文件夹失败，请重试');
+      toast.error('创建文件夹失败，请重试');
     }
   };
 
   const handleSelectFolder = (folderId: string | null) => {
-    setFolder(folderId || '');
+    setSelectedFolderInDialog(folderId);
+  };
+
+  const handleConfirmSelectFolder = () => {
+    setFolder(selectedFolderInDialog || '');
     setIsFolderSelectOpen(false);
   };
 
@@ -360,7 +405,15 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
             {/* Folder */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <Label className="text-base">文件夹</Label>
-              <Dialog open={isFolderSelectOpen} onOpenChange={setIsFolderSelectOpen}>
+              <Dialog 
+                open={isFolderSelectOpen} 
+                onOpenChange={(open) => {
+                  setIsFolderSelectOpen(open);
+                  if (open) {
+                    setSelectedFolderInDialog(folder || null);
+                  }
+                }}
+              >
                 <Button
                   variant="outline"
                   className="w-full justify-between mt-3"
@@ -389,12 +442,12 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
                       <button
                         onClick={() => handleSelectFolder(null)}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 transition-colors text-left ${
-                          !folder ? 'bg-blue-50 text-blue-700' : ''
+                          !selectedFolderInDialog ? 'bg-blue-50 text-blue-700' : ''
                         }`}
                       >
                         <Folder className="w-4 h-4 flex-shrink-0" />
                         <span className="flex-1">无</span>
-                        {!folder && <Check className="w-4 h-4 text-blue-600" />}
+                        {!selectedFolderInDialog && <Check className="w-4 h-4 text-blue-600" />}
                       </button>
 
                       {/* 文件夹列表 */}
@@ -402,19 +455,35 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
                     </div>
                   </div>
                   
-                  <div className="border-t pt-3 mt-3">
-                    <Button
-                      variant="outline"
-                      className="w-full justify-center text-blue-600 hover:text-blue-700"
-                      onClick={() => {
-                        setIsFolderDialogOpen(true);
-                        setIsFolderSelectOpen(false);
-                      }}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      新建文件夹
-                    </Button>
-                  </div>
+                  <DialogFooter className="flex-col sm:justify-between gap-2 mt-4 border-t pt-4">
+                    <div className="flex justify-between w-full items-center">
+                      <Button
+                        variant="ghost"
+                        className="text-blue-600 hover:text-blue-700 p-0 h-auto font-normal hover:bg-transparent"
+                        onClick={() => {
+                          if (selectedFolderInDialog) {
+                            const depth = getFolderDepth(selectedFolderInDialog);
+                            if (depth >= 3) {
+                              toast.error('不允许创建超过3级的文件夹');
+                              return;
+                            }
+                          }
+                          setIsFolderDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        新建文件夹
+                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setIsFolderSelectOpen(false)}>
+                          取消
+                        </Button>
+                        <Button onClick={handleConfirmSelectFolder}>
+                          确定
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogFooter>
                 </DialogContent>
               </Dialog>
               

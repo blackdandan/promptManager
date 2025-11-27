@@ -21,7 +21,7 @@ class FolderService(
         log.info("创建文件夹: userId=$userId, name=$name, parentId=$parentId")
         
         // 检查文件夹名称是否重复
-        val existingFolder = folderRepository.findByUserIdAndNameAndIsDeletedFalse(userId, name)
+        val existingFolder = folderRepository.findByUserIdAndNameAndParentIdAndIsDeletedFalse(userId, name, parentId)
         if (existingFolder != null) {
             throw IllegalArgumentException("文件夹名称已存在: $name")
         }
@@ -83,10 +83,13 @@ class FolderService(
         val existingFolder = getFolderById(userId, folderId)
         
         // 检查文件夹名称是否重复（排除当前文件夹）
-        if (name != null && name != existingFolder.name) {
-            val duplicateFolder = folderRepository.findByUserIdAndNameAndIsDeletedFalse(userId, name)
+        val targetName = name ?: existingFolder.name
+        val targetParentId = parentId ?: existingFolder.parentId
+        
+        if (name != existingFolder.name || parentId != existingFolder.parentId) {
+            val duplicateFolder = folderRepository.findByUserIdAndNameAndParentIdAndIsDeletedFalse(userId, targetName, targetParentId)
             if (duplicateFolder != null && duplicateFolder.id != folderId) {
-                throw IllegalArgumentException("文件夹名称已存在: $name")
+                throw IllegalArgumentException("文件夹名称已存在: $targetName")
             }
         }
         

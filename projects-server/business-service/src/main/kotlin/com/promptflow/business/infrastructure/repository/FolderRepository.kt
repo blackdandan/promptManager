@@ -15,6 +15,8 @@ interface FolderRepository : MongoRepository<Folder, ObjectId> {
     
     fun findByUserIdAndNameAndIsDeletedFalse(userId: ObjectId, name: String): Folder?
     
+    fun findByUserIdAndNameAndParentIdAndIsDeletedFalse(userId: ObjectId, name: String, parentId: ObjectId?): Folder?
+
     fun findByUserIdAndIdAndIsDeletedFalse(userId: ObjectId, id: ObjectId): Folder?
     
     @Query("{ 'userId': ?0, 'isDeleted': false, 'name': { \$regex: ?1, \$options: 'i' } }")
