@@ -29,6 +29,8 @@ import type {
   Category,
   CreateCategoryRequest,
   UpdateCategoryRequest,
+  UpdateUserProfileRequest,
+  FeedbackRequest,
 } from "../types/api";
 import API_CONFIG from "../config/api.config";
 
@@ -234,6 +236,37 @@ export const authApi = {
    */
   async logout(): Promise<void> {
     clearTokens();
+  },
+};
+
+// ========== 用户接口 ==========
+export const userApi = {
+  /**
+   * 更新用户信息
+   */
+  async updateProfile(data: UpdateUserProfileRequest): Promise<User> {
+    const response = await request<User>("/users/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    // 更新本地存储的用户信息
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const updatedUser = { ...currentUser, ...response.data };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    return response.data;
+  },
+};
+
+// ========== 反馈接口 ==========
+export const feedbackApi = {
+  /**
+   * 提交反馈
+   */
+  async submit(data: FeedbackRequest): Promise<void> {
+    await request("/feedback", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 };
 
@@ -659,6 +692,8 @@ export const folderApi = {
 // ========== 导出所有API ==========
 export const api = {
   auth: authApi,
+  user: userApi,
+  feedback: feedbackApi,
   oauth: oauthApi,
   session: sessionApi,
   prompt: promptApi,

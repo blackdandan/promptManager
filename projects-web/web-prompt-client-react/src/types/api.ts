@@ -35,6 +35,17 @@ export interface User {
   avatarUrl?: string;
 }
 
+export interface UpdateUserProfileRequest {
+  displayName?: string;
+  avatarUrl?: string;
+}
+
+export interface FeedbackRequest {
+  type: string;
+  content: string;
+  contact?: string;
+}
+
 export interface DeviceInfo {
   deviceId: string;
   deviceType: DeviceType;

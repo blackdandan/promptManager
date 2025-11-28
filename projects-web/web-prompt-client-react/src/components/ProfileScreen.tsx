@@ -8,7 +8,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { 
-  Mail, 
   MessageSquare, 
   LogOut, 
   Copy,
@@ -16,11 +15,13 @@ import {
   Send,
   Bug,
   Lightbulb,
-  Heart
+  Heart,
+  Edit
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { useState } from 'react';
 import { copyToClipboard } from '../utils/clipboard';
+import { api } from '../services/api';
 
 type ProfileScreenProps = {
   onBack: () => void;
@@ -44,6 +45,8 @@ export function ProfileScreen({
   const [feedbackType, setFeedbackType] = useState('suggestion');
   const [feedbackContent, setFeedbackContent] = useState('');
   const [feedbackContact, setFeedbackContact] = useState('');
+  const [isEditNameOpen, setIsEditNameOpen] = useState(false);
+  const [newUserName, setNewUserName] = useState(userName);
 
   const handleCopyUserId = async () => {
     const success = await copyToClipboard(userId);
@@ -56,28 +59,46 @@ export function ProfileScreen({
     }
   };
 
-  const handleSubmitFeedback = () => {
+  const handleSubmitFeedback = async () => {
     if (!feedbackContent.trim()) {
       toast.error('请输入反馈内容');
       return;
     }
 
-    // 模拟提交反馈
-    console.log('提交反馈:', {
-      type: feedbackType,
-      content: feedbackContent,
-      contact: feedbackContact,
-      userId,
-      userName
-    });
+    try {
+      await api.feedback.submit({
+        type: feedbackType,
+        content: feedbackContent,
+        contact: feedbackContact
+      });
+      toast.success('感谢您的反馈！我们会认真考虑您的建议。');
+      
+      // 重置表单
+      setFeedbackOpen(false);
+      setFeedbackType('suggestion');
+      setFeedbackContent('');
+      setFeedbackContact('');
+    } catch (error) {
+      toast.error('反馈提交失败，请稍后重试');
+    }
+  };
 
-    toast.success('感谢您的反馈！我们会认真考虑您的建议。');
-    
-    // 重置表单
-    setFeedbackOpen(false);
-    setFeedbackType('suggestion');
-    setFeedbackContent('');
-    setFeedbackContact('');
+  const handleUpdateUserName = async () => {
+    if (!newUserName.trim()) {
+      toast.error('用户名不能为空');
+      return;
+    }
+
+    try {
+      await api.user.updateProfile({ displayName: newUserName.trim() });
+      toast.success('用户名修改成功');
+      setIsEditNameOpen(false);
+      // 触发页面刷新或更新父组件状态（这里为了简单直接刷新页面，或者依赖父组件重新传递props）
+      // 更好的做法是onUpdateProfile callback
+      setTimeout(() => window.location.reload(), 500); 
+    } catch (error) {
+      toast.error('用户名修改失败');
+    }
   };
 
   const getFeedbackTypeIcon = (type: string) => {
@@ -136,7 +157,12 @@ export function ProfileScreen({
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <h2 className="text-2xl mb-2">{userName}</h2>
+                <div className="flex items-center gap-2 mb-2">
+                  <h2 className="text-2xl">{userName}</h2>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsEditNameOpen(true)}>
+                    <Edit className="w-4 h-4 text-gray-500" />
+                  </Button>
+                </div>
                 <Badge variant="secondary" className="mb-3">
                   {getLoginTypeLabel()}
                 </Badge>
@@ -157,22 +183,6 @@ export function ProfileScreen({
                   </Button>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Account Section */}
-          <div className="bg-white rounded-lg border border-gray-200">
-            <div className="p-4 border-b">
-              <h3 className="font-medium">账号设置</h3>
-            </div>
-            <div className="divide-y">
-              <button className="w-full flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition-colors text-left">
-                <Mail className="w-5 h-5 text-gray-500" />
-                <div className="flex-1">
-                  <p className="font-medium">邮箱绑定</p>
-                  <p className="text-sm text-gray-500">绑定邮箱以接收通知</p>
-                </div>
-              </button>
             </div>
           </div>
 
@@ -234,6 +244,29 @@ export function ProfileScreen({
           </div>
         </div>
       </div>
+
+      {/* Edit UserName Dialog */}
+      <Dialog open={isEditNameOpen} onOpenChange={setIsEditNameOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>修改用户名</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="username">用户名</Label>
+            <Input
+              id="username"
+              value={newUserName}
+              onChange={(e) => setNewUserName(e.target.value)}
+              className="mt-2"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditNameOpen(false)}>取消</Button>
+            <Button onClick={handleUpdateUserName}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Feedback Dialog */}
       <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>

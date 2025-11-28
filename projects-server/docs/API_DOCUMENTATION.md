@@ -1213,6 +1213,82 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 2. 可以查看和管理所有活跃会话
 3. 可以单独或批量失效会话
 
+## 13. 用户服务接口 (补充)
+
+### 13.1 更新用户资料
+
+**PUT** `/users/profile`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**请求体:**
+```json
+{
+  "displayName": "新的昵称",
+  "avatarUrl": "https://example.com/new-avatar.jpg"
+}
+```
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "用户资料更新成功",
+  "data": {
+    "userId": "user_id",
+    "username": "user123",
+    "email": "user@example.com",
+    "displayName": "新的昵称",
+    "userType": "REGISTERED",
+    "roles": ["USER"]
+  }
+}
+```
+
+### 13.2 获取用户资料
+
+**GET** `/users/profile`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "获取用户资料成功",
+  "data": { ... }
+}
+```
+
+## 14. 反馈接口
+
+### 14.1 提交反馈
+
+**POST** `/feedback`
+
+**请求头:**
+- `X-User-Id`: 用户ID
+
+**请求体:**
+```json
+{
+  "type": "suggestion", // bug, suggestion, other
+  "content": "我有一个很好的建议...",
+  "contact": "user@example.com"
+}
+```
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "反馈提交成功",
+  "data": null
+}
+```
+
 ## 12. 安全说明
 
 ### 12.1 Token安全
