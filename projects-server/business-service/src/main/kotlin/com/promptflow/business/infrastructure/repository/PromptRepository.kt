@@ -33,6 +33,8 @@ interface PromptRepository : MongoRepository<Prompt, String> {
     
     @Query("{ 'user_id': ?0, 'category': ?1 }")
     fun findByUserIdAndCategory(userId: String, category: String): List<Prompt>
+
+    fun findByUserIdAndCategoryId(userId: String, categoryId: String): List<Prompt>
     
     fun countByUserId(userId: String): Long
     

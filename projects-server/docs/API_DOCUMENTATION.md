@@ -12,11 +12,13 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 - **错误处理**: 统一错误响应格式
 
 ### 统一响应格式
+> **注意**：所有API（包括新增的分类管理接口）都必须遵循此统一响应格式。后端控制器应返回 `ApiResponse<T>` 对象。
+
 ```json
 {
-  "code": 200,
-  "message": "操作成功",
-  "data": { ... }
+  "code": 200, // 成功为200，失败见错误码
+  "message": "操作成功", // 或错误描述
+  "data": { ... } // 业务数据，失败时为null
 }
 ```
 
@@ -1013,36 +1015,157 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 }
 ```
 
-## 7. 错误码说明
+## 7. 分类管理接口
 
-### 7.1 认证相关错误码
+### 7.1 获取分类列表
+
+**GET** `/categories`
+
+**请求头:**
+- `X-User-ID`: 用户ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "获取分类列表成功",
+  "data": [
+    {
+      "id": "category_id_1",
+      "userId": "user_id",
+      "name": "通用",
+      "sortOrder": 0,
+      "isSystem": true,
+      "createdAt": "2024-01-01T00:00:00",
+      "updatedAt": "2024-01-01T00:00:00"
+    },
+    {
+      "id": "category_id_2",
+      "userId": "user_id",
+      "name": "写作",
+      "sortOrder": 1,
+      "isSystem": false,
+      "createdAt": "2024-01-01T00:00:00",
+      "updatedAt": "2024-01-01T00:00:00"
+    }
+  ]
+}
+```
+
+### 7.2 创建分类
+
+**POST** `/categories`
+
+**请求头:**
+- `X-User-ID`: 用户ID
+
+**请求体:**
+```json
+{
+  "name": "新分类名称"
+}
+```
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "创建分类成功",
+  "data": {
+    "id": "new_category_id",
+    "userId": "user_id",
+    "name": "新分类名称",
+    "sortOrder": 2,
+    "isSystem": false,
+    "createdAt": "2024-01-02T00:00:00",
+    "updatedAt": "2024-01-02T00:00:00"
+  }
+}
+```
+
+### 7.3 更新分类
+
+**PUT** `/categories/{id}`
+
+**请求头:**
+- `X-User-ID`: 用户ID
+
+**路径参数:**
+- `id`: 分类ID
+
+**请求体:**
+```json
+{
+  "name": "更新后的分类名称"
+}
+```
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "更新分类成功",
+  "data": {
+    "id": "category_id",
+    "userId": "user_id",
+    "name": "更新后的分类名称",
+    "sortOrder": 2,
+    "isSystem": false,
+    "createdAt": "2024-01-02T00:00:00",
+    "updatedAt": "2024-01-02T00:00:00"
+  }
+}
+```
+
+### 7.4 删除分类
+
+**DELETE** `/categories/{id}`
+
+**请求头:**
+- `X-User-ID`: 用户ID
+
+**路径参数:**
+- `id`: 分类ID
+
+**响应:**
+```json
+{
+  "code": 200,
+  "message": "删除分类成功",
+  "data": null
+}
+```
+
+## 8. 错误码说明
+
+### 8.1 认证相关错误码
 - `AUTH_001`: 认证失败
 - `AUTH_002`: Token过期
 - `AUTH_003`: 三方登录失败
 - `AUTH_004`: 游客升级失败
 
-### 7.2 验证相关错误码
+### 8.2 验证相关错误码
 - `VALIDATION_001`: 参数验证失败
 
-### 7.3 资源相关错误码
+### 8.3 资源相关错误码
 - `NOT_FOUND_001`: 用户不存在
 - `NOT_FOUND_002`: Prompt不存在
 - `NOT_FOUND_003`: 会话不存在
 
-### 7.4 冲突相关错误码
+### 8.4 冲突相关错误码
 - `CONFLICT_001`: 邮箱已存在
 - `CONFLICT_002`: 用户名已存在
 - `CONFLICT_003`: 会员已存在
 
-### 7.5 权限相关错误码
+### 8.5 权限相关错误码
 - `ACCESS_DENIED_001`: 无权访问
 - `ACCESS_DENIED_002`: 权限不足
 
-### 7.6 系统相关错误码
+### 8.6 系统相关错误码
 - `SYSTEM_001`: 系统错误
 - `SYSTEM_002`: 数据库错误
 
-### 7.7 会员相关错误码
+### 8.7 会员相关错误码
 - `MEMBERSHIP_001`: 会员不存在
 - `MEMBERSHIP_002`: 会员已过期
 - `MEMBERSHIP_003`: 会员升级失败

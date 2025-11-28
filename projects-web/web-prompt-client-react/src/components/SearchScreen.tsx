@@ -1,23 +1,75 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Prompt } from '../App';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import { Search, X, Star, Clock, Copy } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { Search, X, Star, Clock, Copy, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { copyToClipboard } from '../utils/clipboard';
+import { Category } from '../types/api';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from './ui/context-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import { Label } from './ui/label';
+import { api } from '../services/api';
 
 type SearchScreenProps = {
   prompts: Prompt[];
+  categories: Category[];
   onBack: () => void;
   onPromptClick: (prompt: Prompt) => void;
+  onCategoryCreated?: () => void;
+  onCategoryDeleted?: () => void;
 };
 
-export function SearchScreen({ prompts, onBack, onPromptClick }: SearchScreenProps) {
+export function SearchScreen({ prompts, categories = [], onBack, onPromptClick, onCategoryCreated, onCategoryDeleted }: SearchScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
-  const categories = Array.from(new Set(prompts.map(p => p.category)));
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast.error('请输入分类名称');
+      return;
+    }
+
+    try {
+      const newCategory = await api.category.createCategory({ name: newCategoryName.trim() });
+      setNewCategoryName('');
+      setIsCategoryDialogOpen(false);
+      toast.success('分类创建成功');
+      
+      if (onCategoryCreated) {
+        onCategoryCreated();
+      }
+      setSelectedCategory(newCategory.name);
+    } catch (error) {
+      toast.error('分类创建失败');
+    }
+  };
+
+  const handleDeleteCategory = async (category: Category) => {
+    if (category.isSystem) {
+      toast.error('系统分类不允许删除');
+      return;
+    }
+
+    const confirmed = confirm(`确定要删除分类 "${category.name}" 吗？\n该分类下的 Prompt 将自动转移到"通用"分类。`);
+    if (!confirmed) return;
+
+    try {
+      await api.category.deleteCategory(category.id);
+      toast.success('分类删除成功');
+      if (onCategoryDeleted) {
+        onCategoryDeleted();
+      }
+      if (selectedCategory === category.name) {
+        setSelectedCategory(null);
+      }
+    } catch (error) {
+      toast.error('分类删除失败');
+    }
+  };
 
   const filteredPrompts = prompts.filter(p => {
     const query = searchQuery.toLowerCase();
@@ -67,7 +119,7 @@ export function SearchScreen({ prompts, onBack, onPromptClick }: SearchScreenPro
         </div>
 
         {/* Category Filter */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           <Button
             variant={selectedCategory === null ? 'default' : 'outline'}
             size="sm"
@@ -76,17 +128,66 @@ export function SearchScreen({ prompts, onBack, onPromptClick }: SearchScreenPro
             全部
           </Button>
           {categories.map((category) => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category}
-            </Button>
+            <ContextMenu key={category.id}>
+              <ContextMenuTrigger>
+                <Button
+                  variant={selectedCategory === category.name ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category.name)}
+                  className="cursor-context-menu"
+                >
+                  {category.name}
+                </Button>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem 
+                  onClick={() => handleDeleteCategory(category)}
+                  disabled={category.isSystem}
+                  className={category.isSystem ? 'text-gray-400' : 'text-red-600'}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  删除分类
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsCategoryDialogOpen(true)}
+            className="px-2"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
         </div>
       </div>
+
+      {/* New Category Dialog */}
+      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>新建分类</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="search-category-name">分类名称</Label>
+            <Input
+              id="search-category-name"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              className="mt-2"
+              autoFocus
+              placeholder="输入分类名称"
+              onKeyDown={(e) => {
+                 if (e.key === 'Enter') handleCreateCategory();
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>取消</Button>
+            <Button onClick={handleCreateCategory}>确定</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Results */}
       <div className="flex-1 overflow-y-auto">

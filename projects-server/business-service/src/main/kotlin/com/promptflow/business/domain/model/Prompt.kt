@@ -27,6 +27,9 @@ data class Prompt(
     
     @Field("category")
     val category: String? = null,
+
+    @Field("category_id")
+    val categoryId: String? = null,
     
     @Field("is_public")
     val isPublic: Boolean = false,

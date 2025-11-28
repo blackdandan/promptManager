@@ -254,6 +254,26 @@ export interface FolderStats {
   updatedAt: string;
 }
 
+// ========== 分类相关类型 ==========
+export interface Category {
+  id: string;
+  userId: string;
+  name: string;
+  color?: string;
+  sortOrder: number;
+  isSystem: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCategoryRequest {
+  name: string;
+}
+
+export interface UpdateCategoryRequest {
+  name: string;
+}
+
 // ========== 错误类型 ==========
 export interface ApiError {
   code: string;

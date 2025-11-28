@@ -233,9 +233,9 @@ export function Sidebar({
     const isDropTarget = dropTargetFolder === node.path;
 
     return (
-      <ContextMenu>
+      <ContextMenu key={node.path}>
         <ContextMenuTrigger>
-          <div key={node.path}>
+          <div>
             <div
               className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors group ${
                 isDropTarget

@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { X, Plus, Folder, ChevronRight, Sparkles, AlertCircle, Check, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../services/api';
-import type { Folder as ApiFolder } from '../types/api';
+import type { Folder as ApiFolder, Category } from '../types/api';
 
 type FolderTreeNode = ApiFolder & { children: FolderTreeNode[] };
 
@@ -21,11 +21,11 @@ type CreatePromptScreenProps = {
   onFolderCreated?: () => void;
   existingPrompts?: Prompt[];
   folders: ApiFolder[];
+  categories: Category[];
+  onCategoryCreated?: () => void;
 };
 
-const categories = ['通用', '写作', '编程', '分析', '创意', '营销'];
-
-export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, existingPrompts = [], folders }: CreatePromptScreenProps) {
+export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, existingPrompts = [], folders, categories, onCategoryCreated }: CreatePromptScreenProps) {
   const [title, setTitle] = useState(prompt?.title || '');
   const [content, setContent] = useState(prompt?.content || '');
   const [category, setCategory] = useState(prompt?.category || '通用');
@@ -38,6 +38,8 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
   const [selectedFolderInDialog, setSelectedFolderInDialog] = useState<string | null>(null);
   const [detectedVariables, setDetectedVariables] = useState<string[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   // 获取文件夹深度
   const getFolderDepth = (folderId: string | null): number => {
@@ -282,6 +284,27 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
     setIsFolderDialogOpen(false);
   };
 
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast.error('请输入分类名称');
+      return;
+    }
+
+    try {
+      const newCategory = await api.category.createCategory({ name: newCategoryName.trim() });
+      setNewCategoryName('');
+      setIsCategoryDialogOpen(false);
+      setCategory(newCategory.name); // 自动选中新建的分类
+      toast.success('分类创建成功');
+      
+      if (onCategoryCreated) {
+        onCategoryCreated();
+      }
+    } catch (error) {
+      toast.error('分类创建失败');
+    }
+  };
+
   const insertVariable = (variable: string) => {
     const cursorPos = (document.getElementById('content') as HTMLTextAreaElement)?.selectionStart || content.length;
     const before = content.substring(0, cursorPos);
@@ -388,18 +411,23 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
             {/* Category */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <Label className="text-base">分类</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="mt-3">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2 mt-3">
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="icon" onClick={() => setIsCategoryDialogOpen(true)}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Folder */}
@@ -575,6 +603,33 @@ export function CreatePromptScreen({ prompt, onSave, onCancel, onFolderCreated, 
           </Button>
         </div>
       </div>
+
+      {/* New Category Dialog */}
+      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>新建分类</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="category-name">分类名称</Label>
+            <Input
+              id="category-name"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              className="mt-2"
+              autoFocus
+              placeholder="输入分类名称"
+              onKeyDown={(e) => {
+                 if (e.key === 'Enter') handleCreateCategory();
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>取消</Button>
+            <Button onClick={handleCreateCategory}>确定</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* New Folder Dialog */}
       <Dialog open={isFolderDialogOpen} onOpenChange={setIsFolderDialogOpen}>

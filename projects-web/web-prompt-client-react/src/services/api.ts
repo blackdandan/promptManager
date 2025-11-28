@@ -26,6 +26,9 @@ import type {
   CreateFolderRequest,
   UpdateFolderRequest,
   FolderStats,
+  Category,
+  CreateCategoryRequest,
+  UpdateCategoryRequest,
 } from "../types/api";
 import API_CONFIG from "../config/api.config";
 
@@ -537,6 +540,48 @@ export const membershipApi = {
   },
 };
 
+// ========== 分类接口 ==========
+export const categoryApi = {
+  /**
+   * 获取用户分类列表
+   */
+  async getCategories(): Promise<Category[]> {
+    const response = await request<Category[]>("/categories");
+    return response.data;
+  },
+
+  /**
+   * 创建分类
+   */
+  async createCategory(data: CreateCategoryRequest): Promise<Category> {
+    const response = await request<Category>("/categories", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  /**
+   * 更新分类
+   */
+  async updateCategory(id: string, data: UpdateCategoryRequest): Promise<Category> {
+    const response = await request<Category>(`/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  /**
+   * 删除分类
+   */
+  async deleteCategory(id: string): Promise<void> {
+    await request(`/categories/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+
 // ========== 文件夹接口 ==========
 export const folderApi = {
   /**
@@ -619,6 +664,7 @@ export const api = {
   prompt: promptApi,
   membership: membershipApi,
   folder: folderApi,
+  category: categoryApi,
 };
 
 export default api;

@@ -8,7 +8,7 @@ import { SearchScreen } from "./components/SearchScreen";
 import { ProfileScreen } from "./components/ProfileScreen";
 import { Toaster, toast } from "sonner";
 import api from "./services/api";
-import type { Prompt as ApiPrompt, User, Folder as ApiFolder, PromptStats } from "./types/api";
+import type { Prompt as ApiPrompt, User, Folder as ApiFolder, PromptStats, Category } from "./types/api";
 
 // 本地Prompt类型（为了兼容现有组件）
 export type Prompt = {
@@ -17,6 +17,7 @@ export type Prompt = {
   content: string;
   tags: string[];
   category: string;
+  categoryId?: string;
   folder?: string;
   isFavorite: boolean;
   usageCount: number;
@@ -60,6 +61,8 @@ export default function App() {
   const [filterType, setFilterType] = useState<'all' | 'favorites' | 'recent'>('all');
   const [folders, setFolders] = useState<ApiFolder[]>([]);
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [isLoadingPrompts, setIsLoadingPrompts] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,6 +136,9 @@ export default function App() {
         
         // 加载文件夹列表
         await loadFolders();
+
+        // 加载分类列表
+        await loadCategories();
         
         // 加载统计信息
         const statsData = await api.prompt.getStats();
@@ -225,6 +231,25 @@ export default function App() {
       localStorage.setItem("guest_prompts", JSON.stringify(promptsToSave));
     } catch (error) {
       console.error("保存本地数据失败:", error);
+    }
+  };
+
+  // 加载分类列表
+  const loadCategories = async () => {
+    if (currentUser?.userType === 'GUEST') {
+      // 游客模式使用固定分类
+      setCategories([]);
+      return;
+    }
+
+    setIsLoadingCategories(true);
+    try {
+      const categoryList = await api.category.getCategories();
+      setCategories(categoryList);
+    } catch (error) {
+      console.error("加载分类失败:", error);
+    } finally {
+      setIsLoadingCategories(false);
     }
   };
 
@@ -798,6 +823,8 @@ export default function App() {
               onFolderCreated={loadFolders}
               existingPrompts={prompts}
               folders={folders}
+              categories={categories}
+              onCategoryCreated={loadCategories}
             />
           )}
 
@@ -808,6 +835,8 @@ export default function App() {
               onCancel={() => setCurrentScreen("detail")}
               existingPrompts={prompts}
               folders={folders}
+              categories={categories}
+              onCategoryCreated={loadCategories}
             />
           )}
 
@@ -826,6 +855,7 @@ export default function App() {
           {currentScreen === "search" && (
             <SearchScreen
               prompts={prompts}
+              categories={categories}
               onBack={() => {
                 setCurrentScreen("main");
                 setCurrentView("main");
@@ -834,6 +864,8 @@ export default function App() {
                 setSelectedPrompt(prompt);
                 setCurrentScreen("detail");
               }}
+              onCategoryCreated={loadCategories}
+              onCategoryDeleted={loadCategories}
             />
           )}
 
