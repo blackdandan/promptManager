@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Prompt } from '../App';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
-import { Star, Clock, Copy, Search, Share2, Trash2, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, Clock, Copy, Search, Share2, Trash2, Edit, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '../utils/clipboard';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, ContextMenuSeparator } from './ui/context-menu';
@@ -55,6 +55,8 @@ export function MainScreen({
   onPromptDragEnd,
   isOverFolder = false
 }: MainScreenProps) {
+  const [jumpPage, setJumpPage] = useState('');
+
   const handleQuickCopy = async (e: React.MouseEvent | undefined, prompt: Prompt) => {
     e?.stopPropagation();
     console.log('Copying prompt:', prompt.id, 'onUse exists:', !!onUse);
@@ -282,7 +284,17 @@ export function MainScreen({
               <div className="text-sm text-gray-500">
                 共 {pagination.totalElements} 条 • 第 {pagination.page + 1} / {pagination.totalPages} 页
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onPageChange(0)}
+                  disabled={pagination.first}
+                  title="首页"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -292,6 +304,28 @@ export function MainScreen({
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   上一页
                 </Button>
+                
+                <div className="flex items-center gap-1 mx-2">
+                  <span className="text-sm text-gray-500">跳转到</span>
+                  <Input
+                    className="h-8 w-12 text-center px-1"
+                    value={jumpPage}
+                    onChange={(e) => setJumpPage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const page = parseInt(jumpPage);
+                        if (page > 0 && page <= pagination.totalPages) {
+                          onPageChange(page - 1);
+                          setJumpPage('');
+                        } else {
+                          toast.error('请输入有效的页码');
+                        }
+                      }
+                    }}
+                  />
+                  <span className="text-sm text-gray-500">页</span>
+                </div>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -300,6 +334,16 @@ export function MainScreen({
                 >
                   下一页
                   <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onPageChange(pagination.totalPages - 1)}
+                  disabled={pagination.last}
+                  title="尾页"
+                >
+                  <ChevronsRight className="w-4 h-4" />
                 </Button>
               </div>
             </div>

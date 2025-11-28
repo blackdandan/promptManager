@@ -5,7 +5,9 @@ import com.promptflow.business.domain.model.PromptStatus
 import com.promptflow.business.infrastructure.repository.PromptRepository
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
@@ -72,8 +74,15 @@ class PromptService(
         // 只查询活跃的Prompt
         query.addCriteria(Criteria.where("status").`is`(PromptStatus.ACTIVE.name))
         
+        // 处理排序逻辑：如果是按lastUsedAt排序，则增加按createdAt倒序作为二级排序
+        var effectivePageable = pageable
+        if (pageable.sort.getOrderFor("lastUsedAt") != null) {
+            val newSort = pageable.sort.and(Sort.by(Sort.Direction.DESC, "createdAt"))
+            effectivePageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, newSort)
+        }
+        
         // 分页
-        query.with(pageable)
+        query.with(effectivePageable)
         
         val prompts = mongoTemplate.find(query, Prompt::class.java)
         val count = mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Prompt::class.java)
@@ -107,11 +116,14 @@ class PromptService(
     }
     
     fun createPrompt(userId: String, prompt: Prompt): Prompt {
+        val now = LocalDateTime.now()
         val newPrompt = prompt.copy(
             userId = userId,
             status = PromptStatus.ACTIVE,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
+            // 创建时将lastUsedAt设为创建时间，以便在"最近"列表中正确排序
+            lastUsedAt = now,
+            createdAt = now,
+            updatedAt = now
         )
         return promptRepository.save(newPrompt).also {
             log.info("用户 $userId 创建Prompt: ${it.id}")
