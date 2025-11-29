@@ -31,18 +31,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import com.promptmanager.app.R
+import com.promptmanager.app.feature.prompt.PromptUiState
+import com.promptmanager.app.feature.prompt.PromptViewModel
 import com.promptmanager.app.core.designsystem.theme.BackgroundGrey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PromptEditorScreen(
+    viewModel: PromptViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
     onSaveClick: (String, String) -> Unit = { _, _ -> }
 ) {
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState) {
+        if (uiState is PromptUiState.Success) {
+            onSaveClick(title, content) // Notify navigation
+            viewModel.resetUiState()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -63,7 +77,7 @@ fun PromptEditorScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onSaveClick(title, content) },
+                onClick = { viewModel.createPrompt(title, content) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
             ) {

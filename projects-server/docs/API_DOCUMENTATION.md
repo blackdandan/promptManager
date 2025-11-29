@@ -14,20 +14,26 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 ### 统一响应格式
 > **注意**：所有API（包括新增的分类管理接口）都必须遵循此统一响应格式。后端控制器应返回 `ApiResponse<T>` 对象。
 
+**成功响应:**
 ```json
 {
-  "code": 200, // 成功为200，失败见错误码
-  "message": "操作成功", // 或错误描述
-  "data": { ... } // 业务数据，失败时为null
+  "success": true,
+  "message": "操作成功", // 可选
+  "data": { ... }, // 业务数据
+  "error": null
 }
 ```
 
-### 错误响应格式
+**错误响应:**
 ```json
 {
-  "code": "ERROR_CODE",
-  "message": "错误消息",
-  "data": null
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "错误消息",
+    "details": "错误详情(可选)"
+  }
 }
 ```
 
@@ -50,7 +56,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 201,
+  "success": true,
   "message": "注册成功",
   "data": {
     "userId": "user_id",
@@ -78,7 +84,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "登录成功",
   "data": {
     "accessToken": "access_token",
@@ -110,7 +116,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "Token刷新成功",
   "data": {
     "accessToken": "new_access_token",
@@ -157,7 +163,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "三方登录成功",
   "data": {
     "userId": "user_id",
@@ -180,7 +186,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取三方登录关联成功",
   "data": [
     {
@@ -205,7 +211,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "解绑三方登录成功",
   "data": null
 }
@@ -237,7 +243,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 201,
+  "success": true,
   "message": "会话创建成功",
   "data": {
     "sessionId": "session_id",
@@ -270,7 +276,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "Token刷新成功",
   "data": {
     "sessionId": "new_session_id",
@@ -298,7 +304,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取会话列表成功",
   "data": [
     {
@@ -331,7 +337,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取活跃会话成功",
   "data": [
     {
@@ -367,7 +373,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "会话失效成功",
   "data": null
 }
@@ -383,7 +389,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "所有会话失效成功",
   "data": null
 }
@@ -400,7 +406,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "其他会话失效成功",
   "data": null
 }
@@ -416,7 +422,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取会话统计成功",
   "data": {
     "totalSessions": 5,
@@ -452,7 +458,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取Prompt列表成功",
   "data": {
     "content": [
@@ -500,7 +506,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取Prompt成功",
   "data": {
     "id": "prompt_id",
@@ -545,7 +551,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 201,
+  "success": true,
   "message": "创建Prompt成功",
   "data": {
     "id": "prompt_id",
@@ -595,7 +601,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "更新Prompt成功",
   "data": {
     "id": "prompt_id",
@@ -630,7 +636,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 204,
+  "success": true,
   "message": "删除Prompt成功",
   "data": null
 }
@@ -649,7 +655,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "切换收藏状态成功",
   "data": {
     "id": "prompt_id",
@@ -684,7 +690,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取公开Prompt列表成功",
   "data": {
     "content": [
@@ -723,7 +729,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取标签列表成功",
   "data": ["标签1", "标签2", "标签3"]
 }
@@ -739,7 +745,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取统计信息成功",
   "data": {
     "totalPrompts": 50,
@@ -764,7 +770,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "更新使用次数成功",
   "data": null
 }
@@ -782,7 +788,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 201,
+  "success": true,
   "message": "免费会员创建成功",
   "data": {
     "membershipId": "membership_id",
@@ -818,7 +824,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取会员信息成功",
   "data": {
     "membershipId": "membership_id",
@@ -864,7 +870,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "会员升级成功",
   "data": {
     "membershipId": "membership_id",
@@ -901,7 +907,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "会员取消成功",
   "data": {
     "membershipId": "membership_id",
@@ -945,7 +951,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "使用量更新成功",
   "data": {
     "membershipId": "membership_id",
@@ -984,7 +990,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "功能访问权限检查成功",
   "data": {
     "feature": "export",
@@ -1003,7 +1009,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取使用统计成功",
   "data": {
     "totalUsage": 120,
@@ -1027,7 +1033,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取分类列表成功",
   "data": [
     {
@@ -1069,7 +1075,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "创建分类成功",
   "data": {
     "id": "new_category_id",
@@ -1103,7 +1109,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "更新分类成功",
   "data": {
     "id": "category_id",
@@ -1130,7 +1136,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "删除分类成功",
   "data": null
 }
@@ -1233,7 +1239,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "用户资料更新成功",
   "data": {
     "userId": "user_id",
@@ -1256,7 +1262,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "获取用户资料成功",
   "data": { ... }
 }
@@ -1283,7 +1289,7 @@ PromptFlow 是一个完整的用户认证和会话管理系统，支持多种登
 **响应:**
 ```json
 {
-  "code": 200,
+  "success": true,
   "message": "反馈提交成功",
   "data": null
 }

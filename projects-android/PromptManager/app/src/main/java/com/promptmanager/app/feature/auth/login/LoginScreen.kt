@@ -33,8 +33,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.CircularProgressIndicator
 import com.promptmanager.app.R
 import com.promptmanager.app.core.designsystem.components.PMButton
+import com.promptmanager.app.feature.auth.AuthUiState
+import com.promptmanager.app.feature.auth.AuthViewModel
 import com.promptmanager.app.core.designsystem.components.PMTextField
 import com.promptmanager.app.core.designsystem.theme.ButtonDark
 import com.promptmanager.app.core.designsystem.theme.GoogleBtnText
@@ -47,7 +53,8 @@ import com.promptmanager.app.core.designsystem.theme.TextLightBlue
 
 @Composable
 fun LoginScreen(
-    onLoginClick: (String, String) -> Unit = { _, _ -> },
+    viewModel: AuthViewModel = hiltViewModel(),
+    onLoginClick: (String, String) -> Unit = { _, _ -> }, // Kept for API compatibility but logic moved to VM
     onRegisterClick: () -> Unit = {},
     onGoogleLoginClick: () -> Unit = {},
     onWeChatLoginClick: () -> Unit = {},
@@ -55,6 +62,14 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val loginState by viewModel.loginState.collectAsState()
+
+    LaunchedEffect(loginState) {
+        if (loginState is AuthUiState.Success) {
+            onLoginClick(email, password) // Notify navigation
+            viewModel.resetLoginState()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -129,12 +144,28 @@ fun LoginScreen(
                 )
 
                 PMButton(
-                    onClick = { onLoginClick(email, password) },
+                    onClick = { viewModel.login(email, password) },
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = ButtonDark,
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    enabled = loginState !is AuthUiState.Loading
                 ) {
-                    Text(text = stringResource(R.string.login))
+                    if (loginState is AuthUiState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text(text = stringResource(R.string.login))
+                    }
+                }
+                
+                if (loginState is AuthUiState.Error) {
+                     Text(
+                        text = (loginState as AuthUiState.Error).message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
 
                 // Register Link

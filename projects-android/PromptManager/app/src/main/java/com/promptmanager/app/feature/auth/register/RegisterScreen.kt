@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -30,9 +31,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.CircularProgressIndicator
 import com.promptmanager.app.R
 import com.promptmanager.app.core.designsystem.components.PMButton
 import com.promptmanager.app.core.designsystem.components.PMTextField
+import com.promptmanager.app.feature.auth.AuthUiState
+import com.promptmanager.app.feature.auth.AuthViewModel
 import com.promptmanager.app.core.designsystem.theme.ButtonDark
 import com.promptmanager.app.core.designsystem.theme.GradientEnd
 import com.promptmanager.app.core.designsystem.theme.GradientStart
@@ -40,12 +47,23 @@ import com.promptmanager.app.core.designsystem.theme.PromptManagerTheme
 
 @Composable
 fun RegisterScreen(
+    viewModel: AuthViewModel = hiltViewModel(),
     onRegisterClick: (String, String) -> Unit = { _, _ -> },
     onBackClick: () -> Unit = {}
 ) {
+    var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    val registerState by viewModel.registerState.collectAsState()
+
+    LaunchedEffect(registerState) {
+        if (registerState is AuthUiState.Success) {
+            onRegisterClick(email, password)
+            viewModel.resetRegisterState()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -96,6 +114,12 @@ fun RegisterScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 PMTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = "用户名" // TODO: Add to strings.xml
+                )
+
+                PMTextField(
                     value = email,
                     onValueChange = { email = it },
                     label = stringResource(R.string.email)
@@ -118,12 +142,43 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 PMButton(
-                    onClick = { onRegisterClick(email, password) },
+                    onClick = { 
+                        if (password == confirmPassword) {
+                            error = null
+                            viewModel.register(username, email, password, username) // Use username as display name for now
+                        } else {
+                            error = "Passwords do not match"
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = ButtonDark,
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    enabled = registerState !is AuthUiState.Loading
                 ) {
-                    Text(text = stringResource(R.string.register_button))
+                    if (registerState is AuthUiState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text(text = stringResource(R.string.register_button))
+                    }
+                }
+                
+                if (error != null) {
+                    Text(
+                        text = error!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                
+                if (registerState is AuthUiState.Error) {
+                    Text(
+                        text = (registerState as AuthUiState.Error).message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }

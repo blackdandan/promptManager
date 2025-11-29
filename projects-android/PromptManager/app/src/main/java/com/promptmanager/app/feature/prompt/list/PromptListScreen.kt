@@ -47,56 +47,27 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
 import com.promptmanager.app.R
+import com.promptmanager.app.core.database.entity.PromptEntity
+import com.promptmanager.app.feature.prompt.PromptViewModel
 import com.promptmanager.app.core.designsystem.theme.BackgroundGrey
 import com.promptmanager.app.core.designsystem.theme.ChipSelectedBg
 import com.promptmanager.app.core.designsystem.theme.ChipSelectedText
 import com.promptmanager.app.core.designsystem.theme.TextGrey
 
-data class PromptItem(
-    val title: String,
-    val content: String,
-    val tags: List<String>,
-    val useCount: Int
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PromptListScreen(
+    viewModel: PromptViewModel = hiltViewModel(),
     onNavigateToCreate: () -> Unit = {},
     onMenuClick: () -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf("全部") }
     
     val filters = listOf("全部", "工作", "写作", "开发", "营销", "数据分析")
-
-    // Mock Data
-    val prompts = listOf(
-        PromptItem(
-            "社交媒体文案生成",
-            "为{platform}平台生成一条关于{topic}的文案，要求： - 风格：{tone} - 包含emoji...",
-            listOf("写作", "文案", "社交媒体"),
-            67
-        ),
-        PromptItem(
-            "文章改写助手",
-            "请将以下文章改写为{tone}风格，字数控制在{length}字左右...",
-            listOf("写作", "改写"),
-            45
-        ),
-        PromptItem(
-            "翻译助手",
-            "将以下文本从{source_lang}翻译成{target_lang}...",
-            listOf("翻译", "通用"),
-            89
-        ),
-        PromptItem(
-            "SEO 标题优化",
-            "为以下内容生成 SEO 优化的标题...",
-            listOf("营销", "SEO"),
-            34
-        )
-    )
+    val prompts by viewModel.prompts.collectAsState()
 
     Scaffold(
         topBar = {
@@ -189,7 +160,7 @@ fun PromptListScreen(
 }
 
 @Composable
-fun PromptCard(prompt: PromptItem) {
+fun PromptCard(prompt: PromptEntity) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(12.dp),
@@ -267,7 +238,7 @@ fun PromptCard(prompt: PromptItem) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = prompt.useCount.toString(),
+                        text = prompt.usageCount.toString(),
                         style = MaterialTheme.typography.labelSmall,
                         color = TextGrey
                     )
