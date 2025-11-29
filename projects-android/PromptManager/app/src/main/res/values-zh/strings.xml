@@ -22,4 +22,11 @@
     <string name="prompt_description_label">描述</string>
     <string name="prompt_content_label">内容</string>
     <string name="prompt_content_placeholder">在此输入提示词内容...</string>
+    <string name="nav_prompt">AI提示词</string>
+    <string name="nav_search">搜索</string>
+    <string name="nav_favorites">收藏</string>
+    <string name="nav_profile">我的</string>
+    <string name="home_title">我的AI提示词</string>
+    <string name="drawer_title">文件夹</string>
+    <string name="drawer_all">全部 Prompts</string>
 </resources>

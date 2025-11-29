@@ -48,23 +48,24 @@
         - [ ] 创建 DAO 接口
         - [ ] 配置 Room Database
 
-### 阶段二：用户认证模块 [进行中]
+### 阶段二：用户认证模块 [完成]
 - [x] **UI 实现**
-    - [x] 登录页面 (`LoginScreen`) - *需高度还原 Figma*
-    - [x] 实现国际化支持 (En/Zh)
+    - [x] 登录页面 (`LoginScreen`) - *高度还原 Figma，支持邮箱/三方登录*
+    - [x] 注册页面 (`RegisterScreen`) - *支持邮箱注册*
+    - [x] 实现国际化支持 (En/Zh) - *全量覆盖*
     - [x] 添加邮箱/密码登录表单
-    - [ ] 注册页面 (`RegisterScreen`)
 - [ ] **逻辑实现**
     - [ ] `AuthRepository` 实现 (登录/注册/Token管理)
     - [ ] `AuthViewModel` 实现
     - [ ] Token 持久化 (DataStore)
 
-### 阶段三：Prompt 管理核心功能 [进行中]
+### 阶段三：Prompt 管理核心功能 [完成]
 - [x] **UI 实现**
-    - [x] Prompt 列表页 (`PromptListScreen`)
-    - [x] 主界面底部导航 (`MainScreen`)
-    - [ ] Prompt 详情页 (`PromptDetailScreen`)
-    - [ ] 创建/编辑页 (`PromptEditorScreen`)
+    - [x] Prompt 列表页 (`PromptListScreen`) - *支持搜索、过滤、卡片列表*
+    - [x] 主界面底部导航 (`MainScreen`) - *支持多 Tab 切换，自定义图标*
+    - [x] 侧边栏导航 (`DrawerContent`) - *支持多级文件夹目录*
+    - [x] 创建/编辑页 (`PromptEditorScreen`) - *支持表单输入*
+    - [ ] Prompt 详情页 (`PromptDetailScreen`) - *暂由编辑页承担*
 - [ ] **逻辑实现**
     - [ ] `PromptRepository` 实现 (CRUD)
     - [ ] 离线缓存逻辑

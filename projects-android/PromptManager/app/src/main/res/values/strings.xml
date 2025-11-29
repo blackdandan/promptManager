@@ -22,4 +22,11 @@
     <string name="prompt_description_label">Description</string>
     <string name="prompt_content_label">Content</string>
     <string name="prompt_content_placeholder">Write your prompt here...</string>
+    <string name="nav_prompt">Prompt</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_profile">Profile</string>
+    <string name="home_title">My Prompt</string>
+    <string name="drawer_title">Folders</string>
+    <string name="drawer_all">All Prompts</string>
 </resources>

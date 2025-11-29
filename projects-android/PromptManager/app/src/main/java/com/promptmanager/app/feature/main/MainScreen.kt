@@ -8,19 +8,24 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.promptmanager.app.R
@@ -32,66 +37,76 @@ fun MainScreen(
     onNavigateToCreate: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    val items = listOf("Prompt", "Search", "Favorites", "Profile")
+    val items = listOf(
+        stringResource(R.string.nav_prompt),
+        stringResource(R.string.nav_search),
+        stringResource(R.string.nav_favorites),
+        stringResource(R.string.nav_profile)
+    )
     val icons = listOf(
-        Icons.Default.Home,
-        Icons.Default.Search,
-        Icons.Default.FavoriteBorder,
-        Icons.Default.Person
-    )
-    val selectedIcons = listOf(
-        Icons.Default.Home, // Filled version if available
-        Icons.Default.Search,
-        Icons.Default.Favorite,
-        Icons.Default.Person
+        R.drawable.ic_nav_prompt,
+        R.drawable.ic_nav_search,
+        R.drawable.ic_nav_fav,
+        R.drawable.ic_nav_profile
     )
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar(
-                containerColor = Color.White,
-                tonalElevation = 8.dp
-            ) {
-                items.forEachIndexed { index, item ->
-                    val isSelected = selectedTab == index
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            DrawerContent(
+                onCloseClick = {
+                    scope.launch { drawerState.close() }
+                }
+            )
+        }
+    ) {
+        Scaffold(
+            bottomBar = {
+                NavigationBar(
+                    containerColor = Color.White,
+                    tonalElevation = 8.dp
+                ) {
+                    items.forEachIndexed { index, item ->
+                        val isSelected = selectedTab == index
                     NavigationBarItem(
                         icon = {
                             Icon(
-                                if (isSelected) selectedIcons[index] else icons[index],
+                                painter = androidx.compose.ui.res.painterResource(id = icons[index]),
                                 contentDescription = item
                             )
                         },
-                        label = { Text(item) },
-                        selected = isSelected,
-                        onClick = { selectedTab = index },
+                            label = { Text(item) },
+                            selected = isSelected,
+                            onClick = { selectedTab = index },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = ChipSelectedText,
                             selectedTextColor = ChipSelectedText,
-                            indicatorColor = Color.Transparent
+                            unselectedIconColor = Color.Gray,
+                            unselectedTextColor = Color.Gray,
+                            indicatorColor = Color.White // Use White to hide the pill if Transparent fails
                         )
-                    )
+                        )
+                    }
                 }
             }
-        }
-    ) { innerPadding ->
-        // Content switching
-        when (selectedTab) {
-            0 -> {
-                // Pass modifier with padding to content
-                // PromptListScreen needs to handle padding or be wrapped
-                // Since PromptListScreen has its own Scaffold, we might have nested Scaffolds which is okay but padding handling is key.
-                // Actually PromptListScreen has Scaffold, so maybe MainScreen shouldn't wrap it in Scaffold content directly?
-                // Better approach: MainScreen manages the high level nav, PromptListScreen is just content.
-                // But PromptListScreen needs FAB.
-                // Let's wrap PromptListScreen in a Box with padding for now.
-                androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
-                    PromptListScreen(onNavigateToCreate = onNavigateToCreate)
+        ) { innerPadding ->
+            // Content switching
+            when (selectedTab) {
+                0 -> {
+                    androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
+                        PromptListScreen(
+                            onNavigateToCreate = onNavigateToCreate,
+                            onMenuClick = { scope.launch { drawerState.open() } }
+                        )
+                    }
                 }
+                1 -> PlaceholderScreen("Search", Modifier.padding(innerPadding))
+                2 -> PlaceholderScreen("Favorites", Modifier.padding(innerPadding))
+                3 -> PlaceholderScreen("Profile", Modifier.padding(innerPadding))
             }
-            1 -> PlaceholderScreen("Search", Modifier.padding(innerPadding))
-            2 -> PlaceholderScreen("Favorites", Modifier.padding(innerPadding))
-            3 -> PlaceholderScreen("Profile", Modifier.padding(innerPadding))
         }
     }
 }
