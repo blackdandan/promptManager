@@ -14,6 +14,12 @@ interface PromptDao {
     @Query("SELECT * FROM prompts ORDER BY updatedAt DESC")
     fun getAllPrompts(): Flow<List<PromptEntity>>
 
+    @Query("SELECT * FROM prompts WHERE folderId = :folderId ORDER BY updatedAt DESC")
+    fun getPromptsByFolder(folderId: String): Flow<List<PromptEntity>>
+
+    @Query("SELECT * FROM prompts WHERE folderId IS NULL ORDER BY updatedAt DESC")
+    fun getPromptsWithoutFolder(): Flow<List<PromptEntity>>
+
     @Query("SELECT * FROM prompts WHERE id = :id")
     fun getPrompt(id: String): Flow<PromptEntity?>
 

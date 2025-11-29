@@ -3,6 +3,7 @@ package com.promptmanager.app.core.database.di
 import android.content.Context
 import androidx.room.Room
 import com.promptmanager.app.core.database.AppDatabase
+import com.promptmanager.app.core.database.dao.FolderDao
 import com.promptmanager.app.core.database.dao.PromptDao
 import com.promptmanager.app.core.database.dao.UserDao
 import dagger.Module
@@ -34,5 +35,10 @@ object DatabaseModule {
     @Provides
     fun providePromptDao(database: AppDatabase): PromptDao {
         return database.promptDao()
+    }
+
+    @Provides
+    fun provideFolderDao(database: AppDatabase): FolderDao {
+        return database.folderDao()
     }
 }

@@ -28,17 +28,22 @@ import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
 import com.promptmanager.app.R
 import com.promptmanager.app.core.designsystem.theme.ChipSelectedText
 import com.promptmanager.app.feature.prompt.list.PromptListScreen
 
 @Composable
 fun MainScreen(
+    viewModel: MainViewModel = hiltViewModel(),
     onNavigateToCreate: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val folders by viewModel.folders.collectAsState()
+    val selectedFolderId by viewModel.selectedFolderId.collectAsState()
 
     val items = listOf(
         stringResource(R.string.nav_prompt),
@@ -57,6 +62,12 @@ fun MainScreen(
         drawerState = drawerState,
         drawerContent = {
             DrawerContent(
+                folders = folders,
+                selectedFolderId = selectedFolderId,
+                onFolderClick = { folderId ->
+                    viewModel.selectFolder(folderId)
+                    scope.launch { drawerState.close() }
+                },
                 onCloseClick = {
                     scope.launch { drawerState.close() }
                 }
@@ -98,6 +109,7 @@ fun MainScreen(
                 0 -> {
                     androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
                         PromptListScreen(
+                            selectedFolderId = selectedFolderId,
                             onNavigateToCreate = onNavigateToCreate,
                             onMenuClick = { scope.launch { drawerState.open() } }
                         )

@@ -3,13 +3,15 @@ package com.promptmanager.app.core.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.promptmanager.app.core.database.dao.FolderDao
 import com.promptmanager.app.core.database.dao.PromptDao
 import com.promptmanager.app.core.database.dao.UserDao
+import com.promptmanager.app.core.database.entity.FolderEntity
 import com.promptmanager.app.core.database.entity.PromptEntity
 import com.promptmanager.app.core.database.entity.UserEntity
 
 @Database(
-    entities = [UserEntity::class, PromptEntity::class],
+    entities = [UserEntity::class, PromptEntity::class, FolderEntity::class],
     version = 1,
     exportSchema = false
 )
@@ -17,4 +19,5 @@ import com.promptmanager.app.core.database.entity.UserEntity
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun promptDao(): PromptDao
+    abstract fun folderDao(): FolderDao
 }

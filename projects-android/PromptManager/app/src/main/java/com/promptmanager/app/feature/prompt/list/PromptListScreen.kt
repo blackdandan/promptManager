@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -35,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.snapshotFlow
 import com.promptmanager.app.R
 import com.promptmanager.app.core.database.entity.PromptEntity
 import com.promptmanager.app.feature.prompt.PromptViewModel
@@ -61,6 +64,7 @@ import com.promptmanager.app.core.designsystem.theme.TextGrey
 @Composable
 fun PromptListScreen(
     viewModel: PromptViewModel = hiltViewModel(),
+    selectedFolderId: String? = null,
     onNavigateToCreate: () -> Unit = {},
     onMenuClick: () -> Unit = {}
 ) {
@@ -68,6 +72,21 @@ fun PromptListScreen(
     
     val filters = listOf("全部", "工作", "写作", "开发", "营销", "数据分析")
     val prompts by viewModel.prompts.collectAsState()
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(selectedFolderId) {
+        viewModel.refreshPrompts(selectedFolderId)
+    }
+    
+    // Pagination: Load more when reaching the end
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastIndex ->
+                if (lastIndex != null && lastIndex >= prompts.size - 1) {
+                    viewModel.loadMorePrompts()
+                }
+            }
+    }
 
     Scaffold(
         topBar = {
@@ -148,6 +167,7 @@ fun PromptListScreen(
 
             // Prompt List
             LazyColumn(
+                state = listState,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 80.dp) // Space for FAB
             ) {

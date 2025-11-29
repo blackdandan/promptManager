@@ -15,16 +15,34 @@ class PromptRepositoryImpl @Inject constructor(
 
     override val prompts: Flow<List<PromptEntity>> = promptDao.getAllPrompts()
 
-    override suspend fun getPrompts(forceRefresh: Boolean): Result<Unit> {
+    override fun getPromptsByFolder(folderId: String?): Flow<List<PromptEntity>> {
+        return if (folderId == null || folderId == "all") {
+            promptDao.getAllPrompts()
+        } else {
+            promptDao.getPromptsByFolder(folderId)
+        }
+    }
+
+    override suspend fun getPrompts(folderId: String?, page: Int, size: Int, forceRefresh: Boolean): Result<Unit> {
         return try {
-            val response = promptService.getPrompts()
+            val apiFolderId = if (folderId == "all") null else folderId
+            val response = promptService.getPrompts(
+                page = page,
+                size = size,
+                folderId = apiFolderId
+            )
             if (response.success && response.data != null) {
                 val dtos = response.data.content
                 val entities = dtos.map { it.toEntity() }
-                // For simplicity, we can clear and replace, or use upsert. 
-                // promptDao.insertPrompts uses OnConflictStrategy.REPLACE
-                // If we want to sync deletion, we should clear prompts first if it's a full sync.
-                // For now, let's just insert/update.
+                
+                // If refreshing (page 0), we might want to clear existing prompts for this folder?
+                // But Room's Flow will update UI automatically.
+                // For a proper sync, we should probably delete prompts that are not in the list if we fetched everything.
+                // But with pagination, we can't delete everything.
+                // A simple strategy: if page == 0 and forceRefresh is true, maybe clear cache for this folder?
+                // But `promptDao` doesn't have `deleteByFolder`.
+                // Let's keep it additive for now, relying on `insertPrompts` (REPLACE).
+                
                 promptDao.insertPrompts(entities)
                 Result.success(Unit)
             } else {

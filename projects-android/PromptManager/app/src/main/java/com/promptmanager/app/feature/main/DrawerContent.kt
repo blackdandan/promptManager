@@ -33,35 +33,37 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.promptmanager.app.R
+import com.promptmanager.app.core.database.entity.FolderEntity
 import com.promptmanager.app.core.designsystem.theme.ChipSelectedText
 import com.promptmanager.app.core.designsystem.theme.TextGrey
 
-data class Folder(
+data class FolderUiModel(
+    val id: String,
     val name: String,
     val count: Int,
-    val children: List<Folder> = emptyList()
+    val children: List<FolderUiModel> = emptyList()
 )
 
 @Composable
 fun DrawerContent(
+    folders: List<FolderEntity> = emptyList(),
+    selectedFolderId: String? = null,
+    onFolderClick: (String?) -> Unit = {},
     onCloseClick: () -> Unit
 ) {
-    // Mock Data with hierarchy
-    val folders = listOf(
-        Folder(stringResource(R.string.drawer_all), 8),
-        Folder("Work", 4),
-        Folder("Writing", 2),
-        Folder("Data Analysis", 1),
-        Folder("Collaboration", 1),
-        Folder("Development", 2, listOf(
-            Folder("Backend", 1),
-            Folder("Review", 1),
-            Folder("Frontend", 1)
-        )),
-        Folder("Marketing", 2)
-    )
+    // Convert flat list to tree
+    val folderTree = remember(folders) {
+        val rootFolders = folders.filter { it.parentId == null }
+        rootFolders.map { root ->
+            val children = folders.filter { it.parentId == root.id }.map { child ->
+                FolderUiModel(child.id, child.name, child.promptCount)
+            }
+            FolderUiModel(root.id, root.name, root.promptCount, children)
+        }
+    }
     
-    var selectedFolder by remember { mutableStateOf(folders[0].name) }
+    // Add "All" folder
+    val allFolders = listOf(FolderUiModel("all", stringResource(R.string.drawer_all), folders.sumOf { it.promptCount })) + folderTree
 
     ModalDrawerSheet(
         drawerShape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp),
@@ -97,11 +99,13 @@ fun DrawerContent(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Recursive List
-            folders.forEach { folder ->
+            allFolders.forEach { folder ->
                 DrawerFolderItem(
                     folder = folder,
-                    selectedFolder = selectedFolder,
-                    onFolderClick = { selectedFolder = it }
+                    selectedFolderId = selectedFolderId ?: "all",
+                    onFolderClick = { 
+                        onFolderClick(if (it == "all") null else it) 
+                    }
                 )
             }
         }
@@ -110,17 +114,17 @@ fun DrawerContent(
 
 @Composable
 fun DrawerFolderItem(
-    folder: Folder,
-    selectedFolder: String,
+    folder: FolderUiModel,
+    selectedFolderId: String,
     onFolderClick: (String) -> Unit,
     level: Int = 0
 ) {
-    val isSelected = selectedFolder == folder.name
+    val isSelected = selectedFolderId == folder.id
     
     NavigationDrawerItem(
         label = { Text(folder.name) },
         selected = isSelected,
-        onClick = { onFolderClick(folder.name) },
+        onClick = { onFolderClick(folder.id) },
         icon = {
             Icon(
                 painter = painterResource(R.drawable.ic_folder),
@@ -153,7 +157,7 @@ fun DrawerFolderItem(
         folder.children.forEach { child ->
             DrawerFolderItem(
                 folder = child,
-                selectedFolder = selectedFolder,
+                selectedFolderId = selectedFolderId,
                 onFolderClick = onFolderClick,
                 level = level + 1
             )
