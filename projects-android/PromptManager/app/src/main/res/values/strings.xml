@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Prompt Manager</string>
+    <string name="login_subtitle">Manage your AI prompts, anytime, anywhere</string>
+    <string name="login_google">Continue with Google</string>
+    <string name="login_wechat">Continue with WeChat</string>
+    <string name="login_guest">Continue as Guest</string>
+    <string name="login_guest_info">Data is saved locally in guest mode</string>
+    <string name="login_footer">Multi-device sync · Secure &amp; Reliable</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="or_continue_with">Or continue with</string>
+    <string name="register_text">Don\'t have an account?</string>
+    <string name="register_link">Register</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_button">Sign Up</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="search_placeholder">Search Prompt</string>
+    <string name="no_prompts">No prompts yet</string>
+    <string name="create_prompt_title">Create Prompt</string>
+    <string name="prompt_title_label">Title</string>
+    <string name="prompt_description_label">Description</string>
+    <string name="prompt_content_label">Content</string>
+    <string name="prompt_content_placeholder">Write your prompt here...</string>
+</resources>

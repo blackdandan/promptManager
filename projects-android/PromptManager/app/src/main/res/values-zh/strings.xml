@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Prompt Manager</string>
+    <string name="login_subtitle">管理你的AI提示词，随时随地使用</string>
+    <string name="login_google">使用 Google 账号登录</string>
+    <string name="login_wechat">使用微信账号登录</string>
+    <string name="login_guest">游客模式体验</string>
+    <string name="login_guest_info">游客模式下数据仅保存在本地</string>
+    <string name="login_footer">支持多端同步 · 安全可靠</string>
+    <string name="email">邮箱</string>
+    <string name="password">密码</string>
+    <string name="login">登录</string>
+    <string name="or_continue_with">或使用以下方式登录</string>
+    <string name="register_text">还没有账号？</string>
+    <string name="register_link">注册</string>
+    <string name="register_title">创建账号</string>
+    <string name="register_button">注册</string>
+    <string name="confirm_password">确认密码</string>
+    <string name="search_placeholder">搜索 Prompt</string>
+    <string name="no_prompts">暂无提示词</string>
+    <string name="create_prompt_title">创建 Prompt</string>
+    <string name="prompt_title_label">标题</string>
+    <string name="prompt_description_label">描述</string>
+    <string name="prompt_content_label">内容</string>
+    <string name="prompt_content_placeholder">在此输入提示词内容...</string>
+</resources>
