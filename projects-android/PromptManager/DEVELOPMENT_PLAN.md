@@ -25,28 +25,28 @@
 
 ## 2. 开发进度追踪
 
-### 阶段一：项目初始化与基础架构 [进行中]
+### 阶段一：项目初始化与基础架构 [完成]
 - [x] **项目骨架搭建**
     - [x] 创建 Gradle 构建文件 (`build.gradle.kts`, `libs.versions.toml`)
     - [x] 配置应用清单 (`AndroidManifest.xml`)
     - [x] 创建基础资源文件 (`strings.xml`, `themes.xml`, `ic_launcher`)
     - [x] 创建 Application 入口 (`PromptManagerApplication`)
     - [x] 创建主 Activity (`MainActivity`)
-- [ ] **核心架构实现**
-    - [ ] **Design System (设计系统)**
+- [x] **核心架构实现**
+    - [x] **Design System (设计系统)**
         - [x] 定义颜色 (`Color.kt`) - *基于 Figma 数据*
         - [x] 定义字体 (`Type.kt`) - *基于 Figma 数据*
-        - [ ] 定义主题 (`Theme.kt`)
-        - [ ] 封装基础组件 (Button, TextField)
-    - [ ] **依赖注入 (DI)**
-        - [ ] 配置 Hilt 模块 (`NetworkModule`, `DatabaseModule`)
-    - [ ] **网络层**
-        - [ ] 定义 API 接口 (`AuthService`, `PromptService`)
-        - [ ] 配置 Retrofit 客户端
-    - [ ] **持久层**
-        - [ ] 定义 Room 实体 (`PromptEntity`, `UserEntity`)
-        - [ ] 创建 DAO 接口
-        - [ ] 配置 Room Database
+        - [x] 定义主题 (`Theme.kt`)
+        - [x] 封装基础组件 (Button, TextField)
+    - [x] **依赖注入 (DI)**
+        - [x] 配置 Hilt 模块 (`NetworkModule`, `DatabaseModule`, `AuthModule`, `PromptModule`)
+    - [x] **网络层**
+        - [x] 定义 API 接口 (`AuthService`, `PromptService`)
+        - [x] 配置 Retrofit 客户端 (`NetworkModule`, `AuthInterceptor`)
+    - [x] **持久层**
+        - [x] 定义 Room 实体 (`PromptEntity`, `UserEntity`)
+        - [x] 创建 DAO 接口 (`UserDao`, `PromptDao`)
+        - [x] 配置 Room Database (`AppDatabase`)
 
 ### 阶段二：用户认证模块 [完成]
 - [x] **UI 实现**
@@ -54,21 +54,21 @@
     - [x] 注册页面 (`RegisterScreen`) - *支持邮箱注册*
     - [x] 实现国际化支持 (En/Zh) - *全量覆盖*
     - [x] 添加邮箱/密码登录表单
-- [ ] **逻辑实现**
-    - [ ] `AuthRepository` 实现 (登录/注册/Token管理)
-    - [ ] `AuthViewModel` 实现
-    - [ ] Token 持久化 (DataStore)
+- [x] **逻辑实现**
+    - [x] `AuthRepository` 实现 (登录/注册/Token管理)
+    - [x] `AuthViewModel` 实现
+    - [x] Token 持久化 (Using SharedPreferences via `TokenManager`)
 
-### 阶段三：Prompt 管理核心功能 [完成]
+### 阶段三：Prompt 管理核心功能 [进行中]
 - [x] **UI 实现**
     - [x] Prompt 列表页 (`PromptListScreen`) - *支持搜索、过滤、卡片列表*
     - [x] 主界面底部导航 (`MainScreen`) - *支持多 Tab 切换，自定义图标*
     - [x] 侧边栏导航 (`DrawerContent`) - *支持多级文件夹目录*
     - [x] 创建/编辑页 (`PromptEditorScreen`) - *支持表单输入*
     - [ ] Prompt 详情页 (`PromptDetailScreen`) - *暂由编辑页承担*
-- [ ] **逻辑实现**
-    - [ ] `PromptRepository` 实现 (CRUD)
-    - [ ] 离线缓存逻辑
+- [x] **逻辑实现**
+    - [x] `PromptRepository` 实现 (CRUD)
+    - [x] 离线缓存逻辑 (Room Database)
     - [ ] 搜索与筛选功能
 
 ### 阶段四：数据同步与优化 [待开始]
